@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TheCodePrism Web Platform
 
-## Getting Started
+An elite, high-performance web ecosystem built with Next.js 15+, featuring advanced visual effects, comprehensive administration tools, and a seamless portfolio experience.
 
-First, run the development server:
+## ✨ Core Features
+
+- **🎨 Quantum-Grade Visuals**: 
+  - Glassmorphic UI with dynamic blur and transparency.
+  - Interactive background systems (Matrix Rain, Fluid Dynamics, Lorenz Attractors).
+  - Custom gravitational lensing and entropy-driven animations.
+- **🛠️ Command Center (Admin)**:
+  - Real-time analytics dashboard.
+  - Full-featured blog and project editors.
+  - Dynamic settings management and profile customization.
+- **🔒 Secure Architecture**:
+  - Integrated Firebase Authentication and Firestore.
+  - Protected admin routes with specialized initialization logic.
+- **📱 Responsive & Accessible**: Optimized for all devices with a mobile-first philosophy.
+
+## 🚀 Tech Stack
+
+- **Framework**: [Next.js 15+](https://nextjs.org/) (App Router, Server Actions)
+- **Styling**: Vanilla CSS with modern CSS variables and modules.
+- **Backend**: [Firebase](https://firebase.google.com/) (Auth, Firestore, Hosting)
+- **Animations**: Custom GLSL Shaders and React-based procedural systems.
+- **Deployment**: [Vercel](https://vercel.com/)
+
+## 📁 Project Overview
+
+- `src/app`: Modern App Router structure with parallel routes and layouts.
+- `src/components`:
+  - `admin/`: Specialized editors and dashboards.
+  - `effects/`: The visual engine (Shaders, Canvas-based systems).
+- `src/lib`: Core services (Firebase, Notifications, Gemini AI integration).
+
+## 🛠️ Getting Started
+
+### Prerequisites
+
+- Node.js 20+
+- npm, yarn, or pnpm
+
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/TheCodePrism/thecodeprism-web.git
+   cd thecodeprism-web
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Environment Setup:
+   - Create a `.env.local` file with your Firebase and API configuration.
+
+### Run Development Server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Visit `http://localhost:3000` to witness the convergence of code and art.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Crafted with excellence by [TheCodePrism Team](https://github.com/TheCodePrism)
