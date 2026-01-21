@@ -1,0 +1,60 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper: Check if the requester is the authenticated admin (Mobile App)
+    function isMobileAdmin() {
+      return request.auth != null;
+    }
+
+    // Helper: Check if the admin panel has been remotely unlocked by the mobile app
+    function isRemoteUnlocked() {
+      return get(/databases/$(database)/documents/config/admin_status).data.remoteEnabled == true;
+    }
+
+    // Sessions: Open for creation (QR), but only mobile admin can authenticate
+    match /sessions/{sessionId} {
+      allow create: if true;
+      allow read: if true;
+      allow update: if isMobileAdmin() || (request.resource.data.status == "pending");
+      allow delete: if isMobileAdmin() || isRemoteUnlocked();
+    }
+    
+    // Admin Status Toggle: Only mobile admin can write
+    match /config/admin_status {
+      allow read: if true;
+      allow write: if isMobileAdmin();
+    }
+
+    // Profile Data: Public read, Admin write (requires mobile unlock)
+    match /config/profile_data {
+      allow read: if true;
+      allow write: if isMobileAdmin() || isRemoteUnlocked();
+    }
+
+    // Portfolio Content: Public read, Admin write (requires mobile unlock)
+    match /projects/{projectId} {
+      allow read: if true;
+      allow write: if isMobileAdmin() || isRemoteUnlocked();
+    }
+    
+    // Blog posts: Public read, Admin write (requires mobile unlock)
+    match /blog_posts/{postId} {
+      allow read: if true;
+      allow write: if isMobileAdmin() || isRemoteUnlocked();
+    }
+
+    // Push Tokens: Admin only access
+    match /config/push_tokens {
+      allow read: if isMobileAdmin();
+      allow write: if isMobileAdmin() || isRemoteUnlocked();
+    }
+
+    // Analytics: Public can create (log visits), only admin can read
+    match /analytics/{docId} {
+      allow create: if true; 
+      allow read: if isMobileAdmin() || isRemoteUnlocked();
+    }
+  }
+}
