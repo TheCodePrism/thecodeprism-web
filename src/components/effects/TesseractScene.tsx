@@ -54,18 +54,29 @@ const noise = `
 `;
 
 interface TesseractSceneProps {
-    scale?: number;
+    tesseractScale?: number;
+    geodesicScale?: number;
 }
 
-const TesseractScene: React.FC<TesseractSceneProps> = ({ scale = 1.0 }) => {
+const TesseractScene: React.FC<TesseractSceneProps> = ({
+    tesseractScale = 1.0,
+    geodesicScale = 1.0
+}) => {
     const containerRef = useRef<HTMLDivElement>(null);
-    const mainGroupRef = useRef<THREE.Group | null>(null);
+    const tesseractGroupRef = useRef<THREE.Group | null>(null);
+    const shellRef = useRef<THREE.Mesh | null>(null);
 
     useEffect(() => {
-        if (mainGroupRef.current) {
-            mainGroupRef.current.scale.set(scale, scale, scale);
+        if (tesseractGroupRef.current) {
+            tesseractGroupRef.current.scale.set(tesseractScale, tesseractScale, tesseractScale);
         }
-    }, [scale]);
+    }, [tesseractScale]);
+
+    useEffect(() => {
+        if (shellRef.current) {
+            shellRef.current.scale.set(geodesicScale, geodesicScale, geodesicScale);
+        }
+    }, [geodesicScale]);
     useEffect(() => {
         const container = containerRef.current;
         if (!container) return;
@@ -73,6 +84,8 @@ const TesseractScene: React.FC<TesseractSceneProps> = ({ scale = 1.0 }) => {
         let scene: THREE.Scene, camera: THREE.PerspectiveCamera, renderer: THREE.WebGLRenderer;
         let tesseract: THREE.LineSegments;
         let mainGroup: THREE.Group;
+        let tesseractGroup: THREE.Group;
+        let shell: THREE.Mesh;
         let energyField: THREE.Mesh;
         let starField: THREE.Points;
         let particles: THREE.Points;
@@ -83,9 +96,13 @@ const TesseractScene: React.FC<TesseractSceneProps> = ({ scale = 1.0 }) => {
         const init = () => {
             scene = new THREE.Scene();
             mainGroup = new THREE.Group();
-            mainGroup.scale.set(scale, scale, scale);
-            mainGroupRef.current = mainGroup;
             scene.add(mainGroup);
+
+            tesseractGroup = new THREE.Group();
+            tesseractGroup.scale.set(tesseractScale, tesseractScale, tesseractScale);
+            tesseractGroupRef.current = tesseractGroup;
+            mainGroup.add(tesseractGroup);
+
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             camera.position.z = 12;
 
@@ -188,7 +205,7 @@ const TesseractScene: React.FC<TesseractSceneProps> = ({ scale = 1.0 }) => {
                 blending: THREE.AdditiveBlending
             });
             tesseract = new THREE.LineSegments(tessGeometry, tessMaterial);
-            mainGroup.add(tesseract);
+            tesseractGroup.add(tesseract);
 
             // Face Geometry
             const faceGeometry = new THREE.BufferGeometry();
@@ -202,14 +219,14 @@ const TesseractScene: React.FC<TesseractSceneProps> = ({ scale = 1.0 }) => {
                 blending: THREE.AdditiveBlending
             });
             const faceMesh = new THREE.Mesh(faceGeometry, faceMaterial);
-            mainGroup.add(faceMesh);
+            tesseractGroup.add(faceMesh);
 
             // Vertex points
             const sphereGeom = new THREE.SphereGeometry(0.04, 8, 8);
             const sphereMat = new THREE.MeshLambertMaterial({ color: 0x3b82f6 });
             for (let i = 0; i < 16; i++) {
                 const s = new THREE.Mesh(sphereGeom, sphereMat);
-                mainGroup.add(s);
+                tesseractGroup.add(s);
                 vertexSpheres.push(s);
             }
 
@@ -257,7 +274,9 @@ const TesseractScene: React.FC<TesseractSceneProps> = ({ scale = 1.0 }) => {
                 blending: THREE.AdditiveBlending,
                 side: THREE.DoubleSide
             });
-            const shell = new THREE.Mesh(shellGeom, shellMaterial);
+            shell = new THREE.Mesh(shellGeom, shellMaterial);
+            shell.scale.set(geodesicScale, geodesicScale, geodesicScale);
+            shellRef.current = shell;
             mainGroup.add(shell);
             energyField = shell;
 

@@ -36,6 +36,7 @@ interface ProfileData {
         entropySystem: boolean;
         fluidBackground: boolean;
         tesseractScale: number;
+        geodesicScale: number;
     };
 }
 
@@ -64,7 +65,8 @@ export default function ProfileEditor() {
             stellarPalette: false,
             entropySystem: false,
             fluidBackground: false,
-            tesseractScale: 1.0
+            tesseractScale: 1.0,
+            geodesicScale: 1.0
         }
     });
     const [loading, setLoading] = useState(true);

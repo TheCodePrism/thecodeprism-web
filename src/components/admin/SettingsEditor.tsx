@@ -36,6 +36,7 @@ interface ProfileData {
         entropySystem: boolean;
         fluidBackground: boolean;
         tesseractScale: number;
+        geodesicScale: number;
     };
 }
 
@@ -125,6 +126,20 @@ export default function SettingsEditor() {
                                         step="0.1"
                                         value={profile.theme?.tesseractScale || 1.0}
                                         onChange={e => setProfile({ ...profile, theme: { ...(profile.theme || {}), tesseractScale: parseFloat(e.target.value) } as any })}
+                                        style={{ width: '100%', marginTop: '8px', accentColor: 'var(--admin-accent)' }}
+                                    />
+                                </div>
+                                <div style={{ marginTop: '1rem' }}>
+                                    <label className={styles.label} style={{ fontSize: '0.8rem', display: 'flex', justifyContent: 'space-between' }}>
+                                        Geodesic Shell Scale <span>{profile.theme?.geodesicScale || 1.0}x</span>
+                                    </label>
+                                    <input
+                                        type="range"
+                                        min="0.5"
+                                        max="3.0"
+                                        step="0.1"
+                                        value={profile.theme?.geodesicScale || 1.0}
+                                        onChange={e => setProfile({ ...profile, theme: { ...(profile.theme || {}), geodesicScale: parseFloat(e.target.value) } as any })}
                                         style={{ width: '100%', marginTop: '8px', accentColor: 'var(--admin-accent)' }}
                                     />
                                 </div>

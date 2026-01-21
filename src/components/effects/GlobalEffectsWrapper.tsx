@@ -23,6 +23,7 @@ interface ThemeSettings {
     entropySystem: boolean;
     fluidBackground: boolean;
     tesseractScale: number;
+    geodesicScale: number;
 }
 
 export default function GlobalEffectsWrapper() {
@@ -44,6 +45,7 @@ export default function GlobalEffectsWrapper() {
                     entropySystem: data.theme?.entropySystem ?? false,
                     fluidBackground: data.theme?.fluidBackground ?? false,
                     tesseractScale: data.theme?.tesseractScale ?? 1.0,
+                    geodesicScale: data.theme?.geodesicScale ?? 1.0,
                 });
             }
         });
@@ -55,7 +57,12 @@ export default function GlobalEffectsWrapper() {
     return (
         <>
             {settings.showMatrix && <MatrixRain />}
-            {settings.showTesseract && <TesseractScene scale={settings.tesseractScale} />}
+            {settings.showTesseract && (
+                <TesseractScene
+                    tesseractScale={settings.tesseractScale}
+                    geodesicScale={settings.geodesicScale}
+                />
+            )}
             {settings.showCustomCursor && <CustomCursor />}
 
             {/* Universal Laws */}
