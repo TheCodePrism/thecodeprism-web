@@ -30,11 +30,16 @@ export default function Dashboard({ activeTab, setActiveTab, handleLogout, share
         <div className={styles.dashboard}>
             <aside className={styles.sidebar}>
                 <div style={{ marginBottom: '3.5rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                        <div className={styles.pulse} style={{ width: '10px', height: '10px', background: 'var(--admin-accent)', borderRadius: '50%', boxShadow: '0 0 10px var(--admin-accent)' }} />
-                        <h1 className={styles.title} style={{ fontSize: '1.5rem' }}>TheCodePrism</h1>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '1.5rem' }}>
+                        <img src="/logo.png" alt="Logo" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
+                        <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
+                                <div className={styles.pulse} style={{ width: '8px', height: '8px', background: 'var(--admin-accent)', borderRadius: '50%', boxShadow: '0 0 10px var(--admin-accent)' }} />
+                                <h1 className={styles.title} style={{ fontSize: '1.25rem' }}>TheCodePrism</h1>
+                            </div>
+                            <div className={styles.subtitle} style={{ letterSpacing: '2px', textTransform: 'uppercase', fontSize: '0.6rem', opacity: 0.7 }}>Admin Control</div>
+                        </div>
                     </div>
-                    <div className={styles.subtitle} style={{ letterSpacing: '2px', textTransform: 'uppercase', fontSize: '0.65rem' }}>Admin Control</div>
                 </div>
 
                 <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1 }}>

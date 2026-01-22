@@ -151,7 +151,7 @@ export default function ProjectEditor() {
                                         style={{ paddingLeft: '44px', width: '100%' }}
                                         value={currentProject.tags?.join(', ') || ''}
                                         onChange={e => setCurrentProject({ ...currentProject, tags: e.target.value.split(',').map(s => s.trim()) })}
-                                        placeholder="React, Firebase, Next.js"
+                                        placeholder="React, Firebase, Tailwind"
                                     />
                                 </div>
                             </div>

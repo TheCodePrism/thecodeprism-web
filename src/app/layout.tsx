@@ -4,12 +4,14 @@ import "./globals.css";
 import InitializationProvider from "@/components/InitializationProvider";
 import GlobalEffectsWrapper from "@/components/effects/GlobalEffectsWrapper";
 
+import { ThemeProvider } from "@/components/ThemeProvider";
+
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "TheCodePrism | Software Engineering Excellence",
   description: "Bespoke digital solutions with specialized mobile-authenticated CMS. Crafting premium web and mobile experiences.",
-  keywords: ["Software Engineer", "React", "Next.js", "Portfolio", "Tesseract", "4D Animation"],
+  keywords: ["Software Engineer", "React", "Portfolio", "Tesseract", "4D Animation"],
   authors: [{ name: "TheCodePrism Team" }],
   openGraph: {
     title: "TheCodePrism - Engineering Perfection",
@@ -36,14 +38,16 @@ export default function RootLayout({
   return (
     <html lang="en" className="no-scrollbar">
       <body className={inter.className}>
-        <InitializationProvider>
-          {/* Global Visual Effects Control */}
-          <GlobalEffectsWrapper />
+        <ThemeProvider>
+          <InitializationProvider>
+            {/* Global Visual Effects Control */}
+            <GlobalEffectsWrapper />
 
-          <main id="lensing-substrate" className="relative z-10">
-            {children}
-          </main>
-        </InitializationProvider>
+            <main id="lensing-substrate" className="relative z-10">
+              {children}
+            </main>
+          </InitializationProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

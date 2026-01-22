@@ -1,6 +1,6 @@
 .container {
     background-color: transparent;
-    color: #fff;
+    color: var(--foreground);
     min-height: 100vh;
     font-family: var(--font-main, 'Inter', system-ui, -apple-system, sans-serif);
     overflow-x: hidden;
@@ -66,7 +66,7 @@
     font-size: 4rem;
     font-weight: 800;
     margin-bottom: 1rem;
-    background: linear-gradient(135deg, #fff 0%, #888 100%);
+    background: linear-gradient(135deg, var(--foreground) 0%, var(--text-muted) 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -83,7 +83,7 @@
 
 .bio {
     max-width: 600px;
-    color: #999;
+    color: var(--text-muted);
     line-height: 1.6;
     margin-bottom: 2.5rem;
     z-index: 1;
@@ -96,7 +96,7 @@
 }
 
 .socialIcon {
-    color: #fff;
+    color: var(--foreground);
     opacity: 0.6;
     transition: all 0.3s ease;
 }
@@ -192,7 +192,7 @@
 }
 
 .projectDesc {
-    color: #888;
+    color: var(--text-muted);
     font-size: 0.95rem;
     line-height: 1.5;
     margin-bottom: 1.5rem;

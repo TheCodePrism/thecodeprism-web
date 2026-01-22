@@ -8,9 +8,10 @@ import { Github, Linkedin, Twitter, Globe, ExternalLink, ArrowRight, User } from
 import { sendPushNotification } from "@/lib/notifications";
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import ThemeToggle from "@/components/ThemeToggle";
+import { useTheme } from "@/components/ThemeProvider";
 
 gsap.registerPlugin(ScrollTrigger);
-
 interface Project {
   id: string;
   title: string;
@@ -48,8 +49,9 @@ interface ProfileData {
 
 export default function Home() {
   const [projects, setProjects] = useState<Project[]>([]);
-  const [profile, setProfile] = useState<ProfileData | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Profile data is now managed by the ThemeProvider and accessed via context
+  const { updateAccent, updateEffects, tokens, profile, loadingProfile } = useTheme();
+  const [loadingProjects, setLoadingProjects] = useState(true);
 
   useEffect(() => {
     // Visitor Tracking
@@ -88,54 +90,57 @@ export default function Home() {
         ...doc.data()
       } as Project));
       setProjects(items);
-    });
-
-    const profileUnsub = onSnapshot(doc(db, "config", "profile_data"), (docSnap) => {
-      if (docSnap.exists()) {
-        setProfile(docSnap.data() as ProfileData);
-      }
-      setLoading(false);
+      setLoadingProjects(false);
     });
 
     // GSAP Scroll Animations
-    if (!loading && profile?.theme?.enableAnimations !== false) {
-      const ctx = gsap.context(() => {
-        // Hero entrance
-        gsap.from(".animate-hero", {
-          y: 60,
-          opacity: 0,
-          duration: 1.2,
-          stagger: 0.2,
-          ease: "power4.out"
-        });
+    // Note: ensure context is checked properly in next block
+    if (!loadingProfile && profile?.theme?.enableAnimations !== false) {
+      // Existing GSAP animations logic
+      gsap.from(".animate-hero", {
+        opacity: 0,
+        y: 50,
+        duration: 1,
+        stagger: 0.2,
+        ease: "power3.out",
+        delay: 0.5
+      });
 
-        // Project grid parallax and entrance
-        gsap.from(".animate-project", {
-          scrollTrigger: {
-            trigger: ".project-grid",
-            start: "top 80%",
-          },
-          y: 100,
+      gsap.utils.toArray(".animate-project").forEach((element) => {
+        gsap.from(element as HTMLElement, {
           opacity: 0,
+          y: 50,
           duration: 1,
-          stagger: 0.15,
-          ease: "expo.out"
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: element as HTMLElement,
+            start: "top 80%",
+            end: "bottom 20%",
+            toggleActions: "play none none reverse",
+          }
         });
       });
-      return () => {
-        projectsUnsub();
-        profileUnsub();
-        ctx.revert();
-      };
+
+      if (profile?.theme?.enableParallax !== false) {
+        gsap.to(".heroBackground", {
+          yPercent: 20,
+          ease: "none",
+          scrollTrigger: {
+            trigger: ".hero",
+            start: "top top",
+            end: "bottom top",
+            scrub: true
+          }
+        });
+      }
     }
 
     return () => {
       projectsUnsub();
-      profileUnsub();
     };
-  }, [loading]);
+  }, [loadingProfile, profile?.theme?.enableAnimations, profile?.theme?.enableParallax]);
 
-  if (loading) return (
+  if (loadingProfile || loadingProjects) return (
     <div className={styles.container} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <p style={{ letterSpacing: '2px', opacity: 0.5 }}>LOADING EXPERIENCE...</p>
     </div>
@@ -144,17 +149,10 @@ export default function Home() {
   return (
     <div
       className={styles.container}
-      style={{
-        '--accent': profile?.theme?.primaryColor || '#4facfe',
-        '--accent-soft': profile?.theme?.primaryColor ? `${profile.theme.primaryColor}4d` : 'rgba(79, 172, 254, 0.3)',
-        '--accent-light': profile?.theme?.primaryColor ? `${profile.theme.primaryColor}1a` : 'rgba(79, 172, 254, 0.1)',
-        '--font-main': profile?.theme?.fontFamily || 'Inter, sans-serif',
-        '--glass-bg': profile?.theme?.glassmorphism ? 'rgba(255, 255, 255, 0.03)' : 'rgba(10, 10, 10, 0.8)',
-        '--glass-border': profile?.theme?.glassmorphism ? 'rgba(255, 255, 255, 0.05)' : 'rgba(34, 34, 34, 1)',
-        '--glass-blur': profile?.theme?.glassmorphism ? 'blur(10px)' : 'none',
-        fontFamily: 'var(--font-main)'
-      } as any}
+      style={{ fontFamily: 'var(--font-main)' }}
     >
+      <ThemeToggle />
+
       <header className={styles.hero}>
         {profile?.theme?.enableParallax !== false && <div className={styles.heroBackground} />}
 
@@ -162,7 +160,9 @@ export default function Home() {
           <img src={profile.avatarUrl} alt={profile.name} className={`${styles.avatar} animate-hero shadow-2xl border-4 border-primary/20`} />
         )}
 
-        <h1 className={`${styles.name} animate-hero entropy-target`}>{profile?.name || "TheCodePrism"}</h1>
+        <div className="flex flex-col items-center gap-6 animate-hero">
+          <h1 className={`${styles.name} entropy-target`}>{profile?.name || "TheCodePrism"}</h1>
+        </div>
         <p className={`${styles.headline} animate-hero entropy-target`}>{profile?.headline || "Software Architect & Creative Coder"}</p>
         <p className={`${styles.bio} animate-hero`}>
           {profile?.bio || "Building the future of the web with AI-driven development and elegant architectural patterns."}
@@ -197,7 +197,7 @@ export default function Home() {
               )}
               <div className={styles.projectContent}>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                  {project.tags.map(tag => (
+                  {project.tags.map((tag: string) => (
                     <span key={tag} className="px-3 py-1 text-xs font-medium rounded-full bg-primary/10 text-primary border border-primary/20">{tag}</span>
                   ))}
                 </div>
@@ -227,7 +227,7 @@ export default function Home() {
       )}
 
       <footer style={{ padding: '4rem 2rem', textAlign: 'center', opacity: 0.5, fontSize: '0.9rem' }}>
-        <p>© {new Date().getFullYear()} {profile?.name}. Built with TheCodePrism.</p>
+        <p>© {new Date().getFullYear()} {profile?.name || "TheCodePrism"}. Engineering Perfection.</p>
       </footer>
     </div>
   );

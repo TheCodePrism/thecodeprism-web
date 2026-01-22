@@ -40,7 +40,8 @@ const MatrixRain: React.FC<MatrixRainProps> = ({
         };
 
         const draw = () => {
-            ctx.fillStyle = `rgba(15, 23, 42, 0.1)`; // Match site background with slight trail
+            const isDark = document.documentElement.classList.contains('dark');
+            ctx.fillStyle = isDark ? `rgba(10, 15, 30, 0.1)` : `rgba(248, 250, 252, 0.1)`;
             ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
 
             ctx.fillStyle = color;

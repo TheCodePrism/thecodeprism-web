@@ -1,57 +1,9 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import { useEntropy } from '@/hooks/useEntropy';
 
 const EntropySystem: React.FC = () => {
-    const [entropy, setEntropy] = useState(0);
-    const [isIdle, setIsIdle] = useState(false);
-
-    useEffect(() => {
-        let idleTimer: any;
-        let entropyInterval: any;
-
-        const resetIdle = () => {
-            setIsIdle(false);
-            setEntropy(0);
-            clearTimeout(idleTimer);
-            clearInterval(entropyInterval);
-
-            idleTimer = setTimeout(() => {
-                setIsIdle(true);
-            }, 5000); // 5 seconds of idle starts entropy
-        };
-
-        const growEntropy = () => {
-            if (isIdle) {
-                entropyInterval = setInterval(() => {
-                    setEntropy(prev => Math.min(prev + 0.05, 5)); // Max entropy factor of 5
-                }, 100);
-            }
-        };
-
-        window.addEventListener('mousemove', resetIdle);
-        window.addEventListener('keydown', resetIdle);
-        window.addEventListener('scroll', resetIdle);
-
-        resetIdle();
-
-        return () => {
-            window.removeEventListener('mousemove', resetIdle);
-            window.removeEventListener('keydown', resetIdle);
-            window.removeEventListener('scroll', resetIdle);
-            clearTimeout(idleTimer);
-            clearInterval(entropyInterval);
-        };
-    }, [isIdle]);
-
-    useEffect(() => {
-        if (isIdle) {
-            const interval = setInterval(() => {
-                setEntropy(prev => Math.min(prev + 0.02, 5));
-            }, 200);
-            return () => clearInterval(interval);
-        }
-    }, [isIdle]);
+    const entropy = useEntropy(5000);
 
     return (
         <>

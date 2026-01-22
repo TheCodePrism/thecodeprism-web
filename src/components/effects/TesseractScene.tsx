@@ -56,15 +56,22 @@ const noise = `
 interface TesseractSceneProps {
     tesseractScale?: number;
     geodesicScale?: number;
+    showTesseract?: boolean;
+    showGeodesicShell?: boolean;
 }
 
 const TesseractScene: React.FC<TesseractSceneProps> = ({
     tesseractScale = 1.0,
-    geodesicScale = 1.0
+    geodesicScale = 1.0,
+    showTesseract = true,
+    showGeodesicShell = true
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const tesseractGroupRef = useRef<THREE.Group | null>(null);
     const shellRef = useRef<THREE.Mesh | null>(null);
+    const mouseRef = useRef(new THREE.Vector2());
+    const targetHoverRef = useRef(0);
+    const currentHoverRef = useRef(0);
 
     useEffect(() => {
         if (tesseractGroupRef.current) {
@@ -77,6 +84,18 @@ const TesseractScene: React.FC<TesseractSceneProps> = ({
             shellRef.current.scale.set(geodesicScale, geodesicScale, geodesicScale);
         }
     }, [geodesicScale]);
+
+    const showTesseractRef = useRef(showTesseract);
+    const showShellRef = useRef(showGeodesicShell);
+
+    useEffect(() => {
+        showTesseractRef.current = showTesseract;
+    }, [showTesseract]);
+
+    useEffect(() => {
+        showShellRef.current = showGeodesicShell;
+    }, [showGeodesicShell]);
+
     useEffect(() => {
         const container = containerRef.current;
         if (!container) return;
@@ -92,6 +111,7 @@ const TesseractScene: React.FC<TesseractSceneProps> = ({
         let vertexSpheres: THREE.Mesh[] = [];
         let animationFrameId: number;
         let time = 0;
+        const raycaster = new THREE.Raycaster();
 
         const init = () => {
             scene = new THREE.Scene();
@@ -106,7 +126,7 @@ const TesseractScene: React.FC<TesseractSceneProps> = ({
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             camera.position.z = 12;
 
-            const aa = window.devicePixelRatio <= 1; // Antialias only on low-DPI screens for performance
+            const aa = window.devicePixelRatio <= 1;
             renderer = new THREE.WebGLRenderer({ alpha: true, antialias: aa });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -130,26 +150,21 @@ const TesseractScene: React.FC<TesseractSceneProps> = ({
                 }
             }
 
-            // Define the 24 faces of a tesseract with correct vertex ordering
             const fixedCoords = [[0, 1], [0, 2], [0, 3], [1, 2], [1, 3], [2, 3]];
             fixedCoords.forEach(([c1, c2]) => {
-                // For each pair of fixed coordinates, there are 4 faces
                 const otherCoords = [0, 1, 2, 3].filter(c => c !== c1 && c !== c2);
                 for (let v1 = -1; v1 <= 1; v1 += 2) {
                     for (let v2 = -1; v2 <= 1; v2 += 2) {
-                        // Find the 4 vertices where coords c1 and c2 are fixed to v1 and v2
                         const faceNodes = [];
                         for (let a = -1; a <= 1; a += 2) {
                             for (let b = -1; b <= 1; b += 2) {
                                 const v = [0, 0, 0, 0];
                                 v[c1] = v1; v[c2] = v2;
                                 v[otherCoords[0]] = a; v[otherCoords[1]] = b;
-                                // Find index of this vertex
                                 const idx = vertices4D.findIndex(vert => vert.every((val, i) => val === v[i]));
                                 faceNodes.push({ idx, a, b });
                             }
                         }
-                        // Order the 4 nodes in a cycle: (-1,-1), (-1,1), (1,1), (1,-1)
                         const sortedNodes = [
                             faceNodes.find(n => n.a === -1 && n.b === -1)!.idx,
                             faceNodes.find(n => n.a === -1 && n.b === 1)!.idx,
@@ -161,38 +176,42 @@ const TesseractScene: React.FC<TesseractSceneProps> = ({
                 }
             });
 
-            const rotate4D = (v: number[], a: any) => {
+            // Buffers for reuse
+            const projectedPositions = new Float32Array(16 * 3);
+            const projectedW = new Float32Array(16);
+            const dummyMatrix = new THREE.Matrix4();
+            const dummyPosition = new THREE.Vector3();
+            const dummyScale = new THREE.Vector3();
+            const dummyQuaternion = new THREE.Quaternion();
+
+            const rotate4D = (v: number[], a: any, out: number[]) => {
                 let [x, y, z, w] = v;
                 let c, s, nx, ny, nz, nw;
 
-                // Rotate in planes that include 'W' to see the 4D effect
-                // X-W rotation
                 c = Math.cos(a.xw); s = Math.sin(a.xw);
                 nx = x * c - w * s; nw = x * s + w * c; x = nx; w = nw;
 
-                // Y-W rotation
                 c = Math.cos(a.yw); s = Math.sin(a.yw);
                 ny = y * c - w * s; nw = y * s + w * c; y = ny; w = nw;
 
-                // Z-W rotation
                 c = Math.cos(a.zw); s = Math.sin(a.zw);
                 nz = z * c - w * s; nw = z * s + w * c; z = nz; w = nw;
 
-                // Standard 3D rotations for overall orientation
                 c = Math.cos(a.xy); s = Math.sin(a.xy); nx = x * c - y * s; ny = x * s + y * c; x = nx; y = ny;
                 c = Math.cos(a.xz); s = Math.sin(a.xz); nx = x * c - z * s; nz = x * s + z * c; x = nx; z = nz;
 
-                return [x, y, z, w];
+                out[0] = x; out[1] = y; out[2] = z; out[3] = w;
             };
 
-            const project4D = (v4: number[]) => {
+            const tempV4 = [0, 0, 0, 0];
+            const project4D = (v4: number[], outIdx: number) => {
                 const [x, y, z, w] = v4;
                 const d = 3.5;
                 const p = 1 / (d - w);
-                return {
-                    pos: new THREE.Vector3(x * p * 5.5, y * p * 5.5, z * p * 5.5),
-                    w: w
-                };
+                projectedPositions[outIdx * 3] = x * p * 5.5;
+                projectedPositions[outIdx * 3 + 1] = y * p * 5.5;
+                projectedPositions[outIdx * 3 + 2] = z * p * 5.5;
+                projectedW[outIdx] = w;
             };
 
             const tessPositions = new Float32Array(edges.length * 2 * 3);
@@ -207,10 +226,9 @@ const TesseractScene: React.FC<TesseractSceneProps> = ({
             tesseract = new THREE.LineSegments(tessGeometry, tessMaterial);
             tesseractGroup.add(tesseract);
 
-            // Face Geometry
             const faceGeometry = new THREE.BufferGeometry();
-            const facePositions = new Float32Array(faces.length * 6 * 3); // 2 triangles per face
-            faceGeometry.setAttribute('position', new THREE.BufferAttribute(facePositions, 3));
+            const facePositionsBuffer = new Float32Array(faces.length * 6 * 3);
+            faceGeometry.setAttribute('position', new THREE.BufferAttribute(facePositionsBuffer, 3));
             const faceMaterial = new THREE.MeshBasicMaterial({
                 color: 0x3b82f6,
                 transparent: true,
@@ -221,56 +239,63 @@ const TesseractScene: React.FC<TesseractSceneProps> = ({
             const faceMesh = new THREE.Mesh(faceGeometry, faceMaterial);
             tesseractGroup.add(faceMesh);
 
-            // Vertex points
+            // Vertex points as InstancedMesh (Reduction from 16 draw calls to 1)
             const sphereGeom = new THREE.SphereGeometry(0.04, 8, 8);
             const sphereMat = new THREE.MeshLambertMaterial({ color: 0x3b82f6 });
-            for (let i = 0; i < 16; i++) {
-                const s = new THREE.Mesh(sphereGeom, sphereMat);
-                tesseractGroup.add(s);
-                vertexSpheres.push(s);
-            }
+            const instancedSpheres = new THREE.InstancedMesh(sphereGeom, sphereMat, 16);
+            tesseractGroup.add(instancedSpheres);
 
-            // Containment Shell - Organic Geodesic Wireframe
-            const shellGeom = new THREE.IcosahedronGeometry(6, 3); // Increased detail to 3 for smoother waves
+            const shellGeom = new THREE.IcosahedronGeometry(6, 3);
             const shellMaterial = new THREE.ShaderMaterial({
                 uniforms: {
                     uTime: { value: 0 },
-                    uColor: { value: new THREE.Color(0xe0e6ff) } // Platinum Silver
+                    uColor: { value: new THREE.Color(0xe0e6ff) },
+                    uMouse: { value: new THREE.Vector2(0, 0) },
+                    uHover: { value: 0.0 }
                 },
                 vertexShader: `
                     varying vec3 vNormal;
                     varying float vNoise;
+                    varying vec3 vViewPosition;
                     uniform float uTime;
+                    uniform vec2 uMouse;
+                    uniform float uHover;
                     ${noise}
                     void main() {
-                        vNormal = normal;
-                        // Organic distortion - slower and more majestic
-                        // Fix: scalar + vector broadcast is non-standard
+                        vNormal = normalize(normalMatrix * normal);
                         vNoise = snoise(normal * 0.8 + vec3(uTime * 0.2));
-                        // Displace vertices along normal
-                        vec3 newPosition = position + normal * vNoise * 1.2;
-                        gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
+                        vec3 pos = position;
+                        vec3 worldPos = (modelMatrix * vec4(pos, 1.0)).xyz;
+                        vec2 mouseDir = uMouse.xy - worldPos.xy * 0.1;
+                        float dist = length(mouseDir);
+                        float force = clamp(1.0 - dist * 0.5, 0.0, 1.0);
+                        vec3 newPosition = pos + normal * vNoise * (1.2 + uHover * 1.0);
+                        newPosition += normal * force * 0.8;
+                        vec4 mvPosition = modelViewMatrix * vec4(newPosition, 1.0);
+                        vViewPosition = -mvPosition.xyz;
+                        gl_Position = projectionMatrix * mvPosition;
                     }
                 `,
                 fragmentShader: `
                     varying vec3 vNormal;
                     varying float vNoise;
+                    varying vec3 vViewPosition;
                     uniform vec3 uColor;
+                    uniform float uHover;
                     void main() {
-                        // Metallic shine simulation
+                        vec3 viewDir = normalize(vViewPosition);
                         float rim = 1.0 - max(0.0, abs(dot(vNormal, vec3(0.0, 0.0, 1.0))));
                         float shine = pow(rim, 3.0);
-                        
-                        // Base color mixed with noise for "shimmer"
-                        vec3 finalColor = uColor + vec3(shine * 0.5);
-                        
-                        // Vary alpha for depth effect
-                        float alpha = 0.3 + (vNoise * 0.1); 
+                        vec3 baseColor = uColor;
+                        vec3 hoverColor = vec3(0.4, 0.6, 1.0);
+                        vec3 mixedColor = mix(baseColor, hoverColor, uHover * 0.5);
+                        vec3 finalColor = mixedColor + vec3(shine * (0.5 + uHover * 1.5));
+                        float alpha = (0.3 + (vNoise * 0.1)) * (1.0 + uHover * 0.5); 
                         gl_FragColor = vec4(finalColor, alpha);
                     }
                 `,
                 transparent: true,
-                wireframe: true, // Key: Wireframe mode
+                wireframe: true,
                 blending: THREE.AdditiveBlending,
                 side: THREE.DoubleSide
             });
@@ -280,17 +305,11 @@ const TesseractScene: React.FC<TesseractSceneProps> = ({
             mainGroup.add(shell);
             energyField = shell;
 
-            // Core Glow - Subtle White Center
             const coreGeom = new THREE.SphereGeometry(0.5, 32, 32);
             const coreMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.15 });
             const core = new THREE.Mesh(coreGeom, coreMat);
             mainGroup.add(core);
 
-            // Keep the previous energyField as a light subtle wireframe if needed, 
-            // but the user wants the new look, so let's adjust the energyField to be the inner glow.
-            // energyField = shell; // Mapping for animation
-
-            // Star Field
             const starGeom = new THREE.BufferGeometry();
             const starVertices = [];
             for (let i = 0; i < 1000; i++) starVertices.push((Math.random() - 0.5) * 100, (Math.random() - 0.5) * 100, (Math.random() - 0.5) * 100);
@@ -299,75 +318,96 @@ const TesseractScene: React.FC<TesseractSceneProps> = ({
             starField = new THREE.Points(starGeom, starMat);
             scene.add(starField);
 
-            // Lights
             scene.add(new THREE.AmbientLight(0xffffff, 0.5));
             const pl = new THREE.PointLight(0x3b82f6, 1, 20);
-            pl.position.set(0, 0, 0);
             scene.add(pl);
 
-            const onResize = () => {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
-            };
             window.addEventListener('resize', onResize);
+            window.addEventListener('mousemove', onMouseMove);
 
             const angles = { xy: 0, xz: 0, xw: 0, yz: 0, yw: 0, zw: 0 };
 
             const animate = () => {
                 animationFrameId = requestAnimationFrame(animate);
-                time += 0.008; // Slower, more majestic movement
+                time += 0.008;
 
-                // Harmonized 4D rotation frequencies
+                raycaster.setFromCamera(mouseRef.current, camera);
+                const intersects = raycaster.intersectObject(shell);
+                targetHoverRef.current = intersects.length > 0 ? 1 : 0;
+                currentHoverRef.current += (targetHoverRef.current - currentHoverRef.current) * 0.1;
+
                 angles.xw = time * 1.0;
                 angles.yw = time * 0.7;
                 angles.zw = time * 0.3;
                 angles.xy = time * 0.5;
                 angles.xz = time * 0.2;
 
-                // Update Shell Noise
                 if (shellMaterial.uniforms) {
                     shellMaterial.uniforms.uTime.value = time;
+                    shellMaterial.uniforms.uMouse.value.copy(mouseRef.current);
+                    shellMaterial.uniforms.uHover.value = currentHoverRef.current;
                 }
                 shell.rotation.y += 0.001;
                 shell.rotation.z -= 0.0005;
 
-                const positions = tesseract.geometry.attributes.position.array as Float32Array;
-                let idx = 0;
-                const rotated = vertices4D.map(v => rotate4D(v, angles));
-                const projected = rotated.map(v => project4D(v));
+                // Visibility control
+                tesseract.visible = showTesseractRef.current;
+                faceMesh.visible = showTesseractRef.current;
+                instancedSpheres.visible = showTesseractRef.current;
+                shell.visible = showShellRef.current;
+                core.visible = showShellRef.current;
 
-                edges.forEach(([s, e]) => {
-                    const v1 = projected[s].pos, v2 = projected[e].pos;
-                    positions[idx++] = v1.x; positions[idx++] = v1.y; positions[idx++] = v1.z;
-                    positions[idx++] = v2.x; positions[idx++] = v2.y; positions[idx++] = v2.z;
-                });
-                tesseract.geometry.attributes.position.needsUpdate = true;
+                // Projection logic (Now object-free inside loop)
+                if (showTesseractRef.current) {
+                    const positions = tesseract.geometry.attributes.position.array as Float32Array;
+                    let idx = 0;
 
-                // Update Faces
-                const fPositions = faceMesh.geometry.attributes.position.array as Float32Array;
-                let fIdx = 0;
-                faces.forEach(f => {
-                    const v1 = projected[f[0]].pos, v2 = projected[f[1]].pos, v3 = projected[f[2]].pos, v4 = projected[f[3]].pos;
-                    // Triangle 1
-                    fPositions[fIdx++] = v1.x; fPositions[fIdx++] = v1.y; fPositions[fIdx++] = v1.z;
-                    fPositions[fIdx++] = v2.x; fPositions[fIdx++] = v2.y; fPositions[fIdx++] = v2.z;
-                    fPositions[fIdx++] = v3.x; fPositions[fIdx++] = v3.y; fPositions[fIdx++] = v3.z;
-                    // Triangle 2
-                    fPositions[fIdx++] = v1.x; fPositions[fIdx++] = v1.y; fPositions[fIdx++] = v1.z;
-                    fPositions[fIdx++] = v3.x; fPositions[fIdx++] = v3.y; fPositions[fIdx++] = v3.z;
-                    fPositions[fIdx++] = v4.x; fPositions[fIdx++] = v4.y; fPositions[fIdx++] = v4.z;
-                });
-                faceMesh.geometry.attributes.position.needsUpdate = true;
+                    for (let i = 0; i < 16; i++) {
+                        rotate4D(vertices4D[i], angles, tempV4);
+                        project4D(tempV4, i);
+                    }
 
-                vertexSpheres.forEach((s, i) => {
-                    const p = projected[i];
-                    s.position.set(p.pos.x, p.pos.y, p.pos.z);
+                    edges.forEach(([s, e]) => {
+                        positions[idx++] = projectedPositions[s * 3];
+                        positions[idx++] = projectedPositions[s * 3 + 1];
+                        positions[idx++] = projectedPositions[s * 3 + 2];
+                        positions[idx++] = projectedPositions[e * 3];
+                        positions[idx++] = projectedPositions[e * 3 + 1];
+                        positions[idx++] = projectedPositions[e * 3 + 2];
+                    });
+                    tesseract.geometry.attributes.position.needsUpdate = true;
 
-                    // Scale spheres based on 4D distance
-                    const scale = (p.w + 1.5) * 0.4;
-                    s.scale.set(scale, scale, scale);
-                });
+                    const fPositionsAttr = faceMesh.geometry.attributes.position.array as Float32Array;
+                    let fIdx = 0;
+                    faces.forEach(f => {
+                        const v = [
+                            f[0] * 3, f[1] * 3, f[2] * 3, f[3] * 3
+                        ];
+
+                        for (let i = 0; i < 3; i++) fPositionsAttr[fIdx++] = projectedPositions[v[0] + i];
+                        for (let i = 0; i < 3; i++) fPositionsAttr[fIdx++] = projectedPositions[v[1] + i];
+                        for (let i = 0; i < 3; i++) fPositionsAttr[fIdx++] = projectedPositions[v[2] + i];
+
+                        for (let i = 0; i < 3; i++) fPositionsAttr[fIdx++] = projectedPositions[v[0] + i];
+                        for (let i = 0; i < 3; i++) fPositionsAttr[fIdx++] = projectedPositions[v[2] + i];
+                        for (let i = 0; i < 3; i++) fPositionsAttr[fIdx++] = projectedPositions[v[3] + i];
+                    });
+                    faceMesh.geometry.attributes.position.needsUpdate = true;
+
+                    // Update InstancedMesh
+                    for (let i = 0; i < 16; i++) {
+                        dummyPosition.set(
+                            projectedPositions[i * 3],
+                            projectedPositions[i * 3 + 1],
+                            projectedPositions[i * 3 + 2]
+                        );
+                        const scale = (projectedW[i] + 1.5) * 0.4;
+                        dummyScale.set(scale, scale, scale);
+                        dummyMatrix.compose(dummyPosition, dummyQuaternion, dummyScale);
+                        instancedSpheres.setMatrixAt(i, dummyMatrix);
+                    }
+                    instancedSpheres.instanceMatrix.needsUpdate = true;
+                }
 
                 starField.rotation.y += 0.0005;
                 renderer.render(scene, camera);
@@ -376,11 +416,26 @@ const TesseractScene: React.FC<TesseractSceneProps> = ({
             animate();
         };
 
+        const onResize = () => {
+
+            if (camera && renderer) {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+        };
+
+        const onMouseMove = (event: MouseEvent) => {
+            mouseRef.current.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouseRef.current.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        };
+
         if (typeof window !== 'undefined') init();
 
         return () => {
             cancelAnimationFrame(animationFrameId);
-            // Proper cleanup
+            window.removeEventListener('resize', onResize);
+            window.removeEventListener('mousemove', onMouseMove);
             if (renderer) {
                 renderer.dispose();
                 container.removeChild(renderer.domElement);
