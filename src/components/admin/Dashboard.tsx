@@ -1,10 +1,12 @@
 import styles from "../../app/thecodeprism-admin/admin.module.css";
-import { LogOut, Settings, LayoutDashboard, FileText, User, Send, Clock, ShieldCheck, Cpu } from "lucide-react";
-import ProjectEditor from "@/components/admin/ProjectEditor";
-import ProfileEditor from "@/components/admin/ProfileEditor";
-import AnalyticsDashboard from "@/components/admin/AnalyticsDashboard";
 import BlogEditor from "@/components/admin/BlogEditor";
 import SettingsEditor from "@/components/admin/SettingsEditor";
+import SkillsEditor from "./SkillsEditor";
+import ExperienceEditor from "./ExperienceEditor";
+import ProjectEditor from "./ProjectEditor";
+import ProfileEditor from "./ProfileEditor";
+import AnalyticsDashboard from "@/components/admin/AnalyticsDashboard";
+import { LogOut, Settings, LayoutDashboard, FileText, User, Send, Clock, ShieldCheck, Cpu, Globe, Brain, History } from "lucide-react";
 
 interface DashboardProps {
     activeTab: string;
@@ -20,6 +22,8 @@ export default function Dashboard({ activeTab, setActiveTab, handleLogout, share
             case 'dashboard': return 'Command Center';
             case 'projects': return 'Portfolio Matrix';
             case 'blog': return 'Journal Transmissions';
+            case 'skills': return 'Skills Matrix';
+            case 'experience': return 'Chronicle Trace';
             case 'profile': return 'Identity Core';
             case 'settings': return 'System Architecture';
             default: return 'Control Center';
@@ -61,6 +65,18 @@ export default function Dashboard({ activeTab, setActiveTab, handleLogout, share
                         active={activeTab === 'blog'}
                         onClick={() => setActiveTab('blog')}
                     />
+                    <NavItem
+                        icon={<Brain size={18} />}
+                        label="Skills"
+                        active={activeTab === 'skills'}
+                        onClick={() => setActiveTab('skills')}
+                    />
+                    <NavItem
+                        icon={<History size={18} />}
+                        label="Chronicle"
+                        active={activeTab === 'experience'}
+                        onClick={() => setActiveTab('experience')}
+                    />
                     <div style={{ height: '1px', background: 'var(--admin-border)', margin: '1rem 0' }} />
                     <NavItem
                         icon={<User size={18} />}
@@ -76,37 +92,61 @@ export default function Dashboard({ activeTab, setActiveTab, handleLogout, share
                     />
                 </nav>
 
-                <button onClick={handleLogout} className={styles.logoutBtn}>
-                    <LogOut size={16} />
-                    Terminal Exit
-                </button>
+                <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <a
+                        href="/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.blueBtn}
+                        style={{ textDecoration: 'none' }}
+                    >
+                        <Globe size={16} />
+                        View Site
+                    </a>
+                    <button onClick={handleLogout} className={styles.logoutBtn}>
+                        <LogOut size={16} />
+                        Terminal Exit
+                    </button>
+                </div>
             </aside>
 
             <main className={styles.mainContent}>
                 <div className={styles.contentArea}>
                     <header className={styles.header}>
                         <div className={styles.tabTitle}>
+                            <span style={{ color: 'var(--admin-accent)', marginRight: '10px', opacity: 0.5 }}>//</span>
                             {getTabTitle()}
                         </div>
 
                         <div className={styles.statusBar}>
                             <div className={styles.statusItem}>
-                                <ShieldCheck size={14} />
-                                <span className={styles.statusValue}>
+                                <ShieldCheck size={14} style={{ color: 'var(--admin-accent)' }} />
+                                <span className={styles.statusValue} style={{ letterSpacing: '1px' }}>
                                     {sharedConstraints?.userType.toUpperCase() || 'ROOT'}
                                 </span>
                             </div>
                             <div style={{ width: '1px', height: '16px', background: 'var(--admin-border)' }} />
                             <div className={styles.statusItem}>
                                 <Cpu size={14} />
-                                <span style={{ opacity: 0.6 }}>LINK:</span>
-                                <span className={styles.statusValue}>ACTIVE</span>
+                                <span style={{ opacity: 0.5, fontSize: '0.7rem' }}>LINK:</span>
+                                <span className={styles.statusValue} style={{ color: '#00ff00', textShadow: '0 0 10px rgba(0, 255, 0, 0.3)' }}>ACTIVE</span>
                             </div>
                             <div style={{ width: '1px', height: '16px', background: 'var(--admin-border)' }} />
-                            <div className={styles.statusItem}>
-                                <Clock size={14} />
-                                <span className={styles.statusValue}>
-                                    {sessionExpiry ? new Date(sessionExpiry).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A'}
+                            <div className={styles.statusItem} style={{ gap: '12px' }}>
+                                <Clock size={14} style={{ opacity: 0.6 }} />
+                                <span className={styles.statusValue} style={{
+                                    fontFamily: 'monospace',
+                                    fontSize: '0.9rem',
+                                    display: 'flex',
+                                    alignItems: 'baseline',
+                                    gap: '4px'
+                                }}>
+                                    <span>
+                                        {sessionExpiry ? new Date(sessionExpiry).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }) : '00:00:00'}
+                                    </span>
+                                    <span style={{ fontSize: '0.65rem', opacity: 0.7, textTransform: 'uppercase' }}>
+                                        {sessionExpiry ? new Date(sessionExpiry).toLocaleTimeString([], { hour: '2-digit', hour12: true }).split(' ')[1] : 'PM'}
+                                    </span>
                                 </span>
                             </div>
                         </div>
@@ -116,6 +156,8 @@ export default function Dashboard({ activeTab, setActiveTab, handleLogout, share
                         {activeTab === 'dashboard' && <AnalyticsDashboard />}
                         {activeTab === 'projects' && <ProjectEditor />}
                         {activeTab === 'blog' && <BlogEditor />}
+                        {activeTab === 'skills' && <SkillsEditor />}
+                        {activeTab === 'experience' && <ExperienceEditor />}
                         {activeTab === 'profile' && <ProfileEditor />}
                         {activeTab === 'settings' && <SettingsEditor />}
                     </div>

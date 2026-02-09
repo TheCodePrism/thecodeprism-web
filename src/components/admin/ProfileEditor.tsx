@@ -37,6 +37,11 @@ interface ProfileData {
         fluidBackground: boolean;
         tesseractScale: number;
         geodesicScale: number;
+        experienceYears: string;
+        satisfactionRate: string;
+        showCursor: boolean;
+        showSubstrate: boolean;
+        vfxIntensity: number;
     };
 }
 
@@ -66,7 +71,12 @@ export default function ProfileEditor() {
             entropySystem: false,
             fluidBackground: false,
             tesseractScale: 1.0,
-            geodesicScale: 1.0
+            geodesicScale: 1.0,
+            experienceYears: '5+',
+            satisfactionRate: '100%',
+            showCursor: true,
+            showSubstrate: true,
+            vfxIntensity: 0.5
         }
     });
     const [loading, setLoading] = useState(true);
@@ -208,6 +218,62 @@ export default function ProfileEditor() {
                             value={profile.socials.website || ''}
                             onChange={v => setProfile({ ...profile, socials: { ...profile.socials, website: v } })}
                         />
+                    </div>
+                </div>
+
+                <div className={styles.glassCard}>
+                    <h3 className={styles.subtitle} style={{ marginBottom: '2rem', fontSize: '1rem', fontWeight: '600', color: '#fff', textTransform: 'uppercase', letterSpacing: '1px' }}>System Status Metrics</h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                        <div className={styles.inputGroup}>
+                            <label className={styles.label}>Years of Experience (Label)</label>
+                            <input
+                                className={styles.input}
+                                value={profile.theme?.experienceYears || ''}
+                                onChange={e => setProfile({ ...profile, theme: { ...profile.theme!, experienceYears: e.target.value } })}
+                                placeholder="5+"
+                            />
+                        </div>
+                        <div className={styles.inputGroup}>
+                            <label className={styles.label}>Satisfaction Rate (%)</label>
+                            <input
+                                className={styles.input}
+                                value={profile.theme?.satisfactionRate || ''}
+                                onChange={e => setProfile({ ...profile, theme: { ...profile.theme!, satisfactionRate: e.target.value } })}
+                                placeholder="100%"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <div className={styles.glassCard}>
+                    <h3 className={styles.subtitle} style={{ marginBottom: '2rem', fontSize: '1rem', fontWeight: '600', color: '#fff', textTransform: 'uppercase', letterSpacing: '1px' }}>Next-Gen Visual Systems</h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                        <div className={styles.inputGroup} style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                            <input
+                                type="checkbox"
+                                checked={profile.theme?.showCursor}
+                                onChange={e => setProfile({ ...profile, theme: { ...profile.theme!, showCursor: e.target.checked } })}
+                            />
+                            <label className={styles.label} style={{ margin: 0 }}>Active Cursor Reticle</label>
+                        </div>
+                        <div className={styles.inputGroup} style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                            <input
+                                type="checkbox"
+                                checked={profile.theme?.showSubstrate}
+                                onChange={e => setProfile({ ...profile, theme: { ...profile.theme!, showSubstrate: e.target.checked } })}
+                            />
+                            <label className={styles.label} style={{ margin: 0 }}>Fluid Light Substrate</label>
+                        </div>
+                        <div className={styles.inputGroup} style={{ gridColumn: 'span 2' }}>
+                            <label className={styles.label}>VFX Intensity Output: {Math.round((profile.theme?.vfxIntensity || 0) * 100)}%</label>
+                            <input
+                                type="range"
+                                min="0" max="1" step="0.1"
+                                style={{ width: '100%', accentColor: 'var(--admin-accent)' }}
+                                value={profile.theme?.vfxIntensity}
+                                onChange={e => setProfile({ ...profile, theme: { ...profile.theme!, vfxIntensity: parseFloat(e.target.value) } })}
+                            />
+                        </div>
                     </div>
                 </div>
 
