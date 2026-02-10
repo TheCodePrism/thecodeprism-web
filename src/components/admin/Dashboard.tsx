@@ -6,7 +6,8 @@ import ExperienceEditor from "./ExperienceEditor";
 import ProjectEditor from "./ProjectEditor";
 import ProfileEditor from "./ProfileEditor";
 import AnalyticsDashboard from "@/components/admin/AnalyticsDashboard";
-import { LogOut, Settings, LayoutDashboard, FileText, User, Send, Clock, ShieldCheck, Cpu, Globe, Brain, History } from "lucide-react";
+import VaultEditor from "@/components/admin/VaultEditor";
+import { LogOut, Settings, LayoutDashboard, FileText, User, Send, Clock, ShieldCheck, Cpu, Globe, Brain, History, HardDrive } from "lucide-react";
 
 interface DashboardProps {
     activeTab: string;
@@ -25,6 +26,7 @@ export default function Dashboard({ activeTab, setActiveTab, handleLogout, share
             case 'skills': return 'Skills Matrix';
             case 'experience': return 'Chronicle Trace';
             case 'profile': return 'Identity Core';
+            case 'vault': return 'Storage Matrix';
             case 'settings': return 'System Architecture';
             default: return 'Control Center';
         }
@@ -83,6 +85,12 @@ export default function Dashboard({ activeTab, setActiveTab, handleLogout, share
                         label="Identity"
                         active={activeTab === 'profile'}
                         onClick={() => setActiveTab('profile')}
+                    />
+                    <NavItem
+                        icon={<HardDrive size={18} />}
+                        label="The Vault"
+                        active={activeTab === 'vault'}
+                        onClick={() => setActiveTab('vault')}
                     />
                     <NavItem
                         icon={<Settings size={18} />}
@@ -159,6 +167,7 @@ export default function Dashboard({ activeTab, setActiveTab, handleLogout, share
                         {activeTab === 'skills' && <SkillsEditor />}
                         {activeTab === 'experience' && <ExperienceEditor />}
                         {activeTab === 'profile' && <ProfileEditor />}
+                        {activeTab === 'vault' && <VaultEditor />}
                         {activeTab === 'settings' && <SettingsEditor />}
                     </div>
                 </div>
