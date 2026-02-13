@@ -32,6 +32,7 @@ interface EffectsConfig {
     fluidBackground: boolean;
     tesseractScale: number;
     geodesicScale: number;
+    tesseractSpeed: number;
 }
 
 interface ThemeContextType {
@@ -53,9 +54,9 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const [profile, setProfile] = useState<any | null>(null);
     const [loadingProfile, setLoadingProfile] = useState(true);
     const [effects, setEffects] = useState<EffectsConfig>({
-        showMatrix: true,
-        showTesseract: true,
-        showGeodesicShell: true,
+        showMatrix: false,
+        showTesseract: false,
+        showGeodesicShell: false,
         showCustomCursor: true,
         enableAnimations: true,
         enableParallax: true,
@@ -67,7 +68,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         entropySystem: false,
         fluidBackground: false,
         tesseractScale: 1.0,
-        geodesicScale: 1.0
+        geodesicScale: 1.0,
+        tesseractSpeed: 1.0
     });
 
     useEffect(() => {
@@ -102,6 +104,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                     fluidBackground: data.theme?.fluidBackground ?? false,
                     tesseractScale: data.theme?.tesseractScale ?? 1.0,
                     geodesicScale: data.theme?.geodesicScale ?? 1.0,
+                    tesseractSpeed: data.theme?.tesseractSpeed ?? 1.0,
                 }));
             }
             setLoadingProfile(false);

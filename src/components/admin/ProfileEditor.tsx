@@ -143,7 +143,7 @@ export default function ProfileEditor() {
                                 <label className={styles.label}>Full Name</label>
                                 <input
                                     className={styles.input}
-                                    value={profile.name}
+                                    value={profile.name ?? ""}
                                     onChange={e => setProfile({ ...profile, name: e.target.value })}
                                     required
                                 />
@@ -152,7 +152,7 @@ export default function ProfileEditor() {
                                 <label className={styles.label}>Headline / Role</label>
                                 <input
                                     className={styles.input}
-                                    value={profile.headline}
+                                    value={profile.headline ?? ""}
                                     onChange={e => setProfile({ ...profile, headline: e.target.value })}
                                     placeholder="Full Stack Developer & AI Enthusiast"
                                 />
@@ -167,7 +167,7 @@ export default function ProfileEditor() {
                             <input
                                 className={styles.input}
                                 style={{ paddingLeft: '44px', width: '100%' }}
-                                value={profile.avatarUrl}
+                                value={profile.avatarUrl ?? ""}
                                 onChange={e => setProfile({ ...profile, avatarUrl: e.target.value })}
                                 placeholder="https://..."
                             />
@@ -179,7 +179,7 @@ export default function ProfileEditor() {
                         <textarea
                             className={styles.input}
                             style={{ minHeight: '150px', resize: 'vertical' }}
-                            value={profile.bio}
+                            value={profile.bio ?? ""}
                             onChange={e => setProfile({ ...profile, bio: e.target.value })}
                         />
                     </div>
@@ -191,31 +191,31 @@ export default function ProfileEditor() {
                         <SocialInput
                             icon={<Mail size={18} />}
                             label="Contact Email"
-                            value={profile.email}
+                            value={profile.email ?? ""}
                             onChange={v => setProfile({ ...profile, email: v })}
                         />
                         <SocialInput
                             icon={<Github size={18} />}
                             label="GitHub Profile"
-                            value={profile.socials.github || ''}
+                            value={profile.socials.github ?? ''}
                             onChange={v => setProfile({ ...profile, socials: { ...profile.socials, github: v } })}
                         />
                         <SocialInput
                             icon={<Linkedin size={18} />}
                             label="LinkedIn Profile"
-                            value={profile.socials.linkedin || ''}
+                            value={profile.socials.linkedin ?? ''}
                             onChange={v => setProfile({ ...profile, socials: { ...profile.socials, linkedin: v } })}
                         />
                         <SocialInput
                             icon={<Twitter size={18} />}
                             label="Twitter / X"
-                            value={profile.socials.twitter || ''}
+                            value={profile.socials.twitter ?? ''}
                             onChange={v => setProfile({ ...profile, socials: { ...profile.socials, twitter: v } })}
                         />
                         <SocialInput
                             icon={<Globe size={18} />}
                             label="Personal Website"
-                            value={profile.socials.website || ''}
+                            value={profile.socials.website ?? ''}
                             onChange={v => setProfile({ ...profile, socials: { ...profile.socials, website: v } })}
                         />
                     </div>
@@ -251,26 +251,29 @@ export default function ProfileEditor() {
                         <div className={styles.inputGroup} style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                             <input
                                 type="checkbox"
-                                checked={profile.theme?.showCursor}
+                                checked={!!profile.theme?.showCursor}
                                 onChange={e => setProfile({ ...profile, theme: { ...profile.theme!, showCursor: e.target.checked } })}
                             />
                             <label className={styles.label} style={{ margin: 0 }}>Active Cursor Reticle</label>
                         </div>
-                        <div className={styles.inputGroup} style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                            <input
-                                type="checkbox"
-                                checked={profile.theme?.showSubstrate}
-                                onChange={e => setProfile({ ...profile, theme: { ...profile.theme!, showSubstrate: e.target.checked } })}
-                            />
-                            <label className={styles.label} style={{ margin: 0 }}>Fluid Light Substrate</label>
-                        </div>
-                        <div className={styles.inputGroup} style={{ gridColumn: 'span 2' }}>
-                            <label className={styles.label}>VFX Intensity Output: {Math.round((profile.theme?.vfxIntensity || 0) * 100)}%</label>
+                        <div className={styles.inputGroup}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '1rem' }}>
+                                <input
+                                    type="checkbox"
+                                    checked={!!profile.theme?.showSubstrate}
+                                    onChange={e => setProfile({ ...profile, theme: { ...profile.theme!, showSubstrate: e.target.checked } })}
+                                />
+                                <label className={styles.label} style={{ margin: 0 }}>Fluid Light Substrate</label>
+                            </div>
+
+                            <label className={styles.label} style={{ fontSize: '0.75rem', opacity: 0.7 }}>
+                                Substrate Intensity: {Math.round((profile.theme?.vfxIntensity ?? 0.5) * 100)}%
+                            </label>
                             <input
                                 type="range"
                                 min="0" max="1" step="0.1"
-                                style={{ width: '100%', accentColor: 'var(--admin-accent)' }}
-                                value={profile.theme?.vfxIntensity}
+                                style={{ width: '100%', accentColor: 'var(--admin-accent)', marginTop: '8px' }}
+                                value={profile.theme?.vfxIntensity ?? 0.5}
                                 onChange={e => setProfile({ ...profile, theme: { ...profile.theme!, vfxIntensity: parseFloat(e.target.value) } })}
                             />
                         </div>

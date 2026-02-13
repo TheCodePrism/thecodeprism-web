@@ -37,6 +37,8 @@ interface ProfileData {
         fluidBackground: boolean;
         tesseractScale: number;
         geodesicScale: number;
+        showGeodesicShell: boolean;
+        tesseractSpeed: number;
     };
 }
 
@@ -110,6 +112,12 @@ export default function SettingsEditor() {
                                     onChange={v => setProfile({ ...profile, theme: { ...(profile.theme || {}), showCustomCursor: v } as any })}
                                 />
                                 <Toggle
+                                    id="geodesic"
+                                    label="Geodesic Wireframe Shell"
+                                    checked={!!profile.theme?.showGeodesicShell}
+                                    onChange={v => setProfile({ ...profile, theme: { ...(profile.theme || {}), showGeodesicShell: v } as any })}
+                                />
+                                <Toggle
                                     id="glass"
                                     label="Glassmorphism Effects"
                                     checked={!!profile.theme?.glassmorphism}
@@ -126,6 +134,20 @@ export default function SettingsEditor() {
                                         step="0.1"
                                         value={profile.theme?.tesseractScale || 1.0}
                                         onChange={e => setProfile({ ...profile, theme: { ...(profile.theme || {}), tesseractScale: parseFloat(e.target.value) } as any })}
+                                        style={{ width: '100%', marginTop: '8px', accentColor: 'var(--admin-accent)' }}
+                                    />
+                                </div>
+                                <div style={{ marginTop: '1rem' }}>
+                                    <label className={styles.label} style={{ fontSize: '0.8rem', display: 'flex', justifyContent: 'space-between' }}>
+                                        Tesseract Rotation Speed <span>{profile.theme?.tesseractSpeed || 1.0}x</span>
+                                    </label>
+                                    <input
+                                        type="range"
+                                        min="0.1"
+                                        max="5.0"
+                                        step="0.1"
+                                        value={profile.theme?.tesseractSpeed || 1.0}
+                                        onChange={e => setProfile({ ...profile, theme: { ...(profile.theme || {}), tesseractSpeed: parseFloat(e.target.value) } as any })}
                                         style={{ width: '100%', marginTop: '8px', accentColor: 'var(--admin-accent)' }}
                                     />
                                 </div>
@@ -267,7 +289,7 @@ export default function SettingsEditor() {
                                 >
                                     <option value="Inter, sans-serif">Inter (Modern & Clean)</option>
                                     <option value="'Courier New', monospace">Courier (Technical & Retro)</option>
-                                    <option value="'Playfair Display', serif">Playfair (Elegant Serra)</option>
+                                    <option value="'Playfair Display', serif">Playfair (Elegant Serif)</option>
                                     <option value="'Outfit', sans-serif">Outfit (Geometric & Bold)</option>
                                 </select>
                             </div>

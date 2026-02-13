@@ -12,8 +12,8 @@ import ThemeToggle from "@/components/ThemeToggle";
 import { useTheme } from "@/components/ThemeProvider";
 import { Cpu, Zap, Activity, Clock } from "lucide-react";
 import Link from 'next/link';
-import CursorReticle from "@/components/visuals/CursorReticle";
 import FluidSubstrate from "@/components/visuals/FluidSubstrate";
+import QuantumLoader from "@/components/visuals/QuantumLoader";
 
 gsap.registerPlugin(ScrollTrigger);
 interface Project {
@@ -250,19 +250,14 @@ export default function Home() {
     };
   }, [loadingProfile, profile?.theme?.enableAnimations, profile?.theme?.enableParallax]);
 
-  if (loadingProfile || loadingProjects) return (
-    <div className={styles.container} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <p style={{ letterSpacing: '2px', opacity: 0.5 }}>LOADING EXPERIENCE...</p>
-    </div>
-  );
+  if (loadingProfile || loadingProjects) return <QuantumLoader />;
 
   return (
     <div
       className={styles.container}
       style={{ fontFamily: 'var(--font-main)' }}
     >
-      {profile?.theme?.showSubstrate !== false && <FluidSubstrate />}
-      {profile?.theme?.showCursor !== false && <CursorReticle />}
+      {profile?.theme?.showSubstrate !== false && <FluidSubstrate intensity={profile?.theme?.vfxIntensity ?? 0.5} />}
 
       <div className={styles.scanlineOverlay} />
       <div className={styles.grainOverlay} />
@@ -321,7 +316,7 @@ export default function Home() {
 
       {/* Skills Matrix */}
       <section className={styles.section}>
-        <TypingHeader title="Skills Matrix" />
+        <h2 className={styles.sectionTitle}>Skills Matrix</h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '3rem' }}>
           <div className={styles.skillsGrid}>
             {dynamicSkills.length > 0 ? (
@@ -336,7 +331,7 @@ export default function Home() {
       </section>
 
       <section className={styles.section}>
-        <TypingHeader title="Featured Projects" />
+        <h2 className={styles.sectionTitle}>Featured Projects</h2>
         <div className={`${styles.projectGrid} project-grid`}>
           {projects.map((project) => (
             <div key={project.id} className={`${styles.projectCard} animate-project animate-tilt glass-card quantum-substrate overflow-hidden group hover:border-primary/50 transition-all duration-500`}>
@@ -369,7 +364,7 @@ export default function Home() {
       </section>
 
       <section className={styles.section}>
-        <TypingHeader title="Experience Timeline" />
+        <h2 className={styles.sectionTitle}>Experience Timeline</h2>
         <div className={styles.timelineContainer}>
           <div className={styles.timelineTrace} />
 
@@ -448,52 +443,3 @@ function TimelineItem({ period, role, company, desc }: { period: string, role: s
   );
 }
 
-function TypingHeader({ title }: { title: string }) {
-  const [text, setText] = useState("");
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    if (isVisible && text.length < title.length) {
-      const timeout = setTimeout(() => {
-        setText(title.slice(0, text.length + 1));
-      }, 50);
-      return () => clearTimeout(timeout);
-    }
-  }, [text, isVisible, title]);
-
-  return (
-    <div
-      id={`trigger-${title.replace(/\s/g, '')}`}
-      style={{ minHeight: '4rem' }}
-    >
-      <h2
-        className={styles.sectionTitle}
-        ref={(el) => {
-          if (el) {
-            ScrollTrigger.create({
-              trigger: el,
-              start: "top 85%",
-              onEnter: () => setIsVisible(true)
-            });
-          }
-        }}
-      >
-        {text}
-        <span style={{
-          display: 'inline-block',
-          width: '3px',
-          height: '1em',
-          background: 'var(--accent)',
-          marginLeft: '5px',
-          animation: 'blink 1s step-end infinite'
-        }}>_</span>
-      </h2>
-      <style jsx>{`
-                @keyframes blink {
-                    from, to { opacity: 1; }
-                    50% { opacity: 0; }
-                }
-            `}</style>
-    </div>
-  );
-}

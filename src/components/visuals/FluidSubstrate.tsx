@@ -3,7 +3,11 @@
 import { useEffect, useRef } from 'react';
 import styles from './FluidSubstrate.module.css';
 
-export default function FluidSubstrate() {
+interface FluidSubstrateProps {
+    intensity?: number;
+}
+
+export default function FluidSubstrate({ intensity = 0.5 }: FluidSubstrateProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
     useEffect(() => {
@@ -15,6 +19,7 @@ export default function FluidSubstrate() {
 
         let animationFrameId: number;
         let particles: Particle[] = [];
+        const maxParticles = Math.floor(100 * intensity);
 
         const resize = () => {
             if (canvas) {
@@ -35,9 +40,9 @@ export default function FluidSubstrate() {
                 this.x = Math.random() * (canvas?.width || 0);
                 this.y = Math.random() * (canvas?.height || 0);
                 this.size = Math.random() * 2 + 0.5;
-                this.speedX = Math.random() * 0.5 - 0.25;
-                this.speedY = Math.random() * 0.5 - 0.25;
-                this.color = 'rgba(79, 172, 254, ' + (Math.random() * 0.3) + ')';
+                this.speedX = (Math.random() * 0.5 - 0.25) * (intensity * 2);
+                this.speedY = (Math.random() * 0.5 - 0.25) * (intensity * 2);
+                this.color = 'rgba(79, 172, 254, ' + (Math.random() * 0.3 * intensity) + ')';
             }
 
             update() {
@@ -60,7 +65,7 @@ export default function FluidSubstrate() {
 
         const init = () => {
             particles = [];
-            for (let i = 0; i < 50; i++) {
+            for (let i = 0; i < maxParticles; i++) {
                 particles.push(new Particle());
             }
         };
@@ -83,7 +88,7 @@ export default function FluidSubstrate() {
             cancelAnimationFrame(animationFrameId);
             window.removeEventListener('resize', resize);
         };
-    }, []);
+    }, [intensity]);
 
     return (
         <canvas

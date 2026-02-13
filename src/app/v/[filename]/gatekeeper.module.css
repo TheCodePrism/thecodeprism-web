@@ -1,0 +1,162 @@
+.gateWrapper {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    position: relative;
+    z-index: 10;
+}
+
+.gateCard {
+    max-width: 500px;
+    width: 100%;
+    padding: 3rem;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(10, 10, 10, 0.8);
+    box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8);
+    animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.gateHeader {
+    margin-bottom: 2.5rem;
+}
+
+.iconShield {
+    width: 80px;
+    height: 80px;
+    background: radial-gradient(circle, var(--accent-light, rgba(79, 172, 254, 0.1)) 0%, transparent 70%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    color: var(--accent, #4facfe);
+    border: 1px solid rgba(var(--accent-rgb), 0.2);
+    box-shadow: 0 0 20px rgba(var(--accent-rgb), 0.1);
+}
+
+.gateHeader h1 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+}
+
+.errorState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1rem;
+}
+
+.contentState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+}
+
+.fileInfo {
+    opacity: 0.8;
+}
+
+.fileInfo h3 {
+    margin: 1rem 0 0.5rem;
+    font-size: 1.2rem;
+}
+
+.codeForm {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.instruction {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+}
+
+.inputWrapper {
+    position: relative;
+    display: flex;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.inputWrapper:focus-within {
+    border-color: var(--accent, #4facfe);
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.1);
+}
+
+.codeInput {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #fff;
+    padding: 1rem;
+    font-size: 1.1rem;
+    outline: none;
+    font-family: 'monospace';
+    letter-spacing: 4px;
+    text-align: center;
+}
+
+.submitBtn {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent, #4facfe);
+    color: #000;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.submitBtn:hover {
+    transform: scale(1.05);
+    background: #fff;
+}
+
+.submitBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.errorMessage {
+    color: #ff4d4d;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: rgba(255, 0, 0, 0.05);
+    padding: 0.8rem;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 0, 0, 0.1);
+}
+
+.footerInfo {
+    margin-top: 1rem;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    opacity: 0.5;
+}

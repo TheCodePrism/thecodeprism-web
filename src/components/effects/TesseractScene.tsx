@@ -58,13 +58,15 @@ interface TesseractSceneProps {
     geodesicScale?: number;
     showTesseract?: boolean;
     showGeodesicShell?: boolean;
+    tesseractSpeed?: number;
 }
 
 const TesseractScene: React.FC<TesseractSceneProps> = ({
     tesseractScale = 1.0,
     geodesicScale = 1.0,
     showTesseract = true,
-    showGeodesicShell = true
+    showGeodesicShell = true,
+    tesseractSpeed = 1.0
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const tesseractGroupRef = useRef<THREE.Group | null>(null);
@@ -329,18 +331,20 @@ const TesseractScene: React.FC<TesseractSceneProps> = ({
 
             const animate = () => {
                 animationFrameId = requestAnimationFrame(animate);
-                time += 0.008;
+                const speedBase = 0.008 * tesseractSpeed;
+                time += speedBase;
 
                 raycaster.setFromCamera(mouseRef.current, camera);
                 const intersects = raycaster.intersectObject(shell);
                 targetHoverRef.current = intersects.length > 0 ? 1 : 0;
                 currentHoverRef.current += (targetHoverRef.current - currentHoverRef.current) * 0.1;
 
-                angles.xw = time * 1.0;
-                angles.yw = time * 0.7;
-                angles.zw = time * 0.3;
-                angles.xy = time * 0.5;
-                angles.xz = time * 0.2;
+                // Harmonized Rotation Coefficients (Syncing 3D/4D)
+                angles.xw = time * 0.6; // Primary 4D unfold
+                angles.yw = time * 0.6; // Secondary 4D fold
+                angles.zw = time * 0.6; // Tertiary 4D axis
+                angles.xy = time * 0.6; // Primary 3D tumble
+                angles.xz = time * 0.6; // Secondary 3D tumble
 
                 if (shellMaterial.uniforms) {
                     shellMaterial.uniforms.uTime.value = time;

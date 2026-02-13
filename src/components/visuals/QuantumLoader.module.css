@@ -1,0 +1,171 @@
+.loaderContainer {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    overflow: hidden;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+.backgroundGrid {
+    position: absolute;
+    inset: 0;
+    background-image: 
+        linear-gradient(rgba(79, 172, 254, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(79, 172, 254, 0.05) 1px, transparent 1px);
+    background-size: 50px 50px;
+    animation: panGrid 20s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes panGrid {
+    from { background-position: 0 0; }
+    to { background-position: 100px 100px; }
+}
+
+.visualCore {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    perspective: 1000px;
+}
+
+.ring {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border: 1px solid rgba(79, 172, 254, 0.3);
+    border-radius: 50%;
+    animation: rotateRing 4s linear infinite;
+}
+
+@keyframes rotateRing {
+    from { transform: rotateX(70deg) rotateZ(0deg); }
+    to { transform: rotateX(70deg) rotateZ(360deg); }
+}
+
+.ring:nth-child(2) { animation-duration: 6s; border-color: rgba(0, 242, 254, 0.2); }
+.ring:nth-child(3) { animation-duration: 8s; border-color: rgba(255, 255, 255, 0.1); }
+
+.satellite {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 6px;
+    height: 6px;
+    background: var(--accent, #4facfe);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--accent, #4facfe);
+    transform: translateX(-50%);
+}
+
+.shootingStar {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: linear-gradient(90deg, #fff, transparent);
+    animation: shoot 5s linear infinite;
+    opacity: 0;
+}
+
+@keyframes shoot {
+    0% { transform: translateX(0) translateY(0) rotate(-45deg) scale(0); opacity: 0; }
+    5% { transform: translateX(0) translateY(0) rotate(-45deg) scale(1); opacity: 1; }
+    15% { transform: translateX(300px) translateY(300px) rotate(-45deg) scale(1.5); opacity: 0; }
+    100% { transform: translateX(300px) translateY(300px) rotate(-45deg) scale(1.5); opacity: 0; }
+}
+
+.cube {
+    width: 60px;
+    height: 60px;
+    position: relative;
+    transform-style: preserve-3d;
+    animation: rotateCube 10s linear infinite;
+}
+
+@keyframes rotateCube {
+    from { transform: rotateX(0deg) rotateY(0deg); }
+    to { transform: rotateX(360deg) rotateY(720deg); }
+}
+
+.cubeFace {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: rgba(79, 172, 254, 0.1);
+    border: 1px solid rgba(79, 172, 254, 0.6);
+}
+
+.cubeFace:nth-child(1) { transform: translateZ(30px); }
+.cubeFace:nth-child(2) { transform: rotateY(180deg) translateZ(30px); }
+.cubeFace:nth-child(3) { transform: rotateY(90deg) translateZ(30px); }
+.cubeFace:nth-child(4) { transform: rotateY(-90deg) translateZ(30px); }
+.cubeFace:nth-child(5) { transform: rotateX(90deg) translateZ(30px); }
+.cubeFace:nth-child(6) { transform: rotateX(-90deg) translateZ(30px); }
+
+.coreGlow {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(circle, rgba(79, 172, 254, 0.2) 0%, transparent 70%);
+    filter: blur(20px);
+    animation: pulseGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes pulseGlow {
+    from { transform: scale(1); opacity: 0.5; }
+    to { transform: scale(1.5); opacity: 0.8; }
+}
+
+.footerInfo {
+    width: 400px;
+    margin-top: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.statusLine {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    letter-spacing: 1px;
+}
+
+.label { color: rgba(255, 255, 255, 0.4); }
+.message { color: var(--accent, #4facfe); font-weight: bold; }
+
+.progressBar {
+    height: 2px;
+    background: rgba(255, 255, 255, 0.1);
+    width: 100%;
+    overflow: hidden;
+}
+
+.progressFill {
+    height: 100%;
+    background: var(--accent, #4facfe);
+    width: 40%;
+    animation: progressLoop 2s ease-in-out infinite;
+}
+
+@keyframes progressLoop {
+    0% { transform: translateX(-100%); width: 20%; }
+    50% { width: 50%; }
+    100% { transform: translateX(400%); width: 20%; }
+}
+
+.technicalDeets {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.2);
+    letter-spacing: 0.5px;
+}

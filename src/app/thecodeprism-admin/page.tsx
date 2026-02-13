@@ -149,16 +149,18 @@ export default function AdminPage() {
         return (
             <NotFoundView>
                 {remoteEnabled && (
-                    <div className={styles.qrContainer} style={{ marginTop: '2rem' }}>
+                    <div className={styles.qrContainer}>
                         {qrId && (
                             <QRCodeCanvas
                                 value={JSON.stringify({ qrId, action: "authenticate_admin" })}
-                                size={180}
+                                size={200}
                                 level={"H"}
-                                includeMargin={true}
+                                includeMargin={false}
+                                bgColor="transparent"
+                                fgColor="#ffffff"
                             />
                         )}
-                        <div className={styles.authText} style={{ marginTop: '1rem', fontSize: '0.8rem', opacity: 0.8 }}>
+                        <div className={styles.authText}>
                             OFFICER AUTHENTICATION REQUIRED
                         </div>
                     </div>

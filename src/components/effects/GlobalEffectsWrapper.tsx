@@ -10,7 +10,9 @@ import EntropySystem from "./EntropySystem";
 import { useTheme } from "../ThemeProvider";
 
 export default function GlobalEffectsWrapper() {
-    const { effects } = useTheme();
+    const { effects, loadingProfile } = useTheme();
+
+    if (loadingProfile) return null;
 
     return (
         <>
@@ -21,6 +23,7 @@ export default function GlobalEffectsWrapper() {
                     geodesicScale={effects.geodesicScale}
                     showTesseract={effects.showTesseract}
                     showGeodesicShell={effects.showGeodesicShell}
+                    tesseractSpeed={effects.tesseractSpeed}
                 />
             )}
             {effects.showCustomCursor && <CustomCursor />}

@@ -43,3 +43,5 @@ next-env.d.ts
 # vault storage
 /public/vault/*
 !/public/vault/.gitkeep
+/src/data/vault/*
+!/src/data/vault/.gitkeep

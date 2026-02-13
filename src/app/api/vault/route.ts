@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
 import { db } from "@/lib/firebase";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, setDoc, getDoc, deleteDoc } from "firebase/firestore";
 
-const VAULT_DIR = path.join(process.cwd(), "public", "vault");
+// Secure storage directory (not publicly accessible)
+const VAULT_DIR = path.join(process.cwd(), "src", "data", "vault");
 
-// Ensure vault directory exists (redundant but safe)
 async function ensureVaultDir() {
     try {
         await fs.access(VAULT_DIR);
@@ -15,25 +15,71 @@ async function ensureVaultDir() {
     }
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
     try {
         await ensureVaultDir();
+
+        const { searchParams } = new URL(req.url);
+        const fileToFetch = searchParams.get("file");
+        const action = searchParams.get("action");
+
+        // Admin preview action: stream file from secure storage
+        if (fileToFetch && action === "preview") {
+            const filePath = path.join(VAULT_DIR, fileToFetch);
+            try {
+                const buffer = await fs.readFile(filePath);
+                const ext = path.extname(fileToFetch).toLowerCase();
+                const contentType = {
+                    '.jpg': 'image/jpeg',
+                    '.jpeg': 'image/jpeg',
+                    '.png': 'image/png',
+                    '.gif': 'image/gif',
+                    '.webp': 'image/webp',
+                    '.svg': 'image/svg+xml',
+                    '.mp4': 'video/mp4',
+                    '.webm': 'video/webm',
+                    '.pdf': 'application/pdf',
+                }[ext] || 'application/octet-stream';
+
+                return new NextResponse(buffer, {
+                    headers: { 'Content-Type': contentType }
+                });
+            } catch (e) {
+                return NextResponse.json({ success: false, error: "File not found" }, { status: 404 });
+            }
+        }
+
         const files = await fs.readdir(VAULT_DIR);
 
-        // Match files with stats if needed, or just return names
         const fileList = await Promise.all(
             files.map(async (fileName) => {
-                const stats = await fs.stat(path.join(VAULT_DIR, fileName));
+                if (fileName === '.gitkeep') return null;
+                const filePath = path.join(VAULT_DIR, fileName);
+                const stats = await fs.stat(filePath);
+
+                // Cross-reference with Firestore for security settings
+                const docRef = doc(db, "vault", fileName);
+                const docSnap = await getDoc(docRef);
+                const data = docSnap.exists() ? docSnap.data() : {};
+
                 return {
                     name: fileName,
                     size: stats.size,
                     updatedAt: stats.mtime,
-                    type: path.extname(fileName).slice(1)
+                    type: path.extname(fileName).slice(1).toLowerCase(),
+                    url: `/api/vault?file=${encodeURIComponent(fileName)}&action=preview`, // Secure admin preview URL
+                    shareUrl: `${process.env.NEXT_PUBLIC_BASE_URL || ''}/v/${encodeURIComponent(fileName)}`,
+                    status: docSnap.exists() ? 'db' : 'local',
+                    visibility: data.visibility || 'public',
+                    hasAccessCode: !!data.accessCode
                 };
             })
         );
 
-        return NextResponse.json({ success: true, files: fileList });
+        return NextResponse.json({
+            success: true,
+            files: fileList.filter(f => f !== null)
+        });
     } catch (error: any) {
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
@@ -56,7 +102,7 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({
             success: true,
-            message: "File uploaded to local vault",
+            message: "File uploaded to secure vault",
             file: {
                 name: file.name,
                 size: file.size,
@@ -70,34 +116,68 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
     try {
-        const { fileName } = await req.json();
+        const { fileName, visibility, accessCode, syncToDB } = await req.json();
 
         if (!fileName) {
             return NextResponse.json({ success: false, error: "No fileName provided" }, { status: 400 });
         }
 
         const filePath = path.join(VAULT_DIR, fileName);
-
-        // Read file content
-        const buffer = await fs.readFile(filePath);
-        const base64Content = buffer.toString("base64");
         const stats = await fs.stat(filePath);
 
-        // Save to Firestore
-        // Using fileName as ID for simplicity, or generate a slug
         const vaultDocRef = doc(db, "vault", fileName);
-        await setDoc(vaultDocRef, {
+        const docSnap = await getDoc(vaultDocRef);
+        const currentData = docSnap.exists() ? docSnap.data() : {};
+
+        const updateData: any = {
+            ...currentData,
             name: fileName,
-            content: base64Content,
             size: stats.size,
-            type: path.extname(fileName).slice(1),
-            uploadedAt: new Date().toISOString(),
-            source: "local_transfer"
-        });
+            type: path.extname(fileName).slice(1).toLowerCase(),
+            updatedAt: new Date().toISOString(),
+        };
+
+        if (visibility !== undefined) updateData.visibility = visibility;
+        if (accessCode !== undefined) updateData.accessCode = accessCode; // Should be encrypted in a real app
+
+        if (syncToDB) {
+            const buffer = await fs.readFile(filePath);
+            updateData.content = buffer.toString("base64");
+            updateData.source = "local_transfer";
+        }
+
+        await setDoc(vaultDocRef, updateData);
 
         return NextResponse.json({
             success: true,
-            message: "File transferred to database"
+            message: "Vault construct security protocols updated"
+        });
+    } catch (error: any) {
+        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    }
+}
+
+export async function DELETE(req: NextRequest) {
+    try {
+        const { searchParams } = new URL(req.url);
+        const fileName = searchParams.get("file");
+
+        if (!fileName) {
+            return NextResponse.json({ success: false, error: "No file name provided" }, { status: 400 });
+        }
+
+        const filePath = path.join(VAULT_DIR, fileName);
+
+        try {
+            await fs.unlink(filePath);
+        } catch (e) { }
+
+        const vaultDocRef = doc(db, "vault", fileName);
+        await deleteDoc(vaultDocRef);
+
+        return NextResponse.json({
+            success: true,
+            message: "Construct purged from vault"
         });
     } catch (error: any) {
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
