@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import fs from "fs/promises";
-import path from "path";
-import { db } from "@/lib/firebase";
+import { db, storage } from "@/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
+import { ref, getDownloadURL } from "firebase/storage";
 
-const VAULT_DIR = path.join(process.cwd(), "src", "data", "vault");
+const VAULT_PREFIX = "vault";
 
 export async function GET(req: NextRequest) {
     try {
@@ -23,15 +22,10 @@ export async function GET(req: NextRequest) {
         const docSnap = await getDoc(vaultDocRef);
 
         if (!docSnap.exists()) {
-            console.log(`[VAULT_SHARE] ${fileName} not in Firestore, checking local storage...`);
-            const filePath = path.join(VAULT_DIR, fileName);
-            try {
-                await fs.stat(filePath);
-                console.log(`[VAULT_SHARE] Found local file at ${filePath}`);
-            } catch (e) {
-                console.error(`[VAULT_SHARE] File not found local: ${filePath}`);
-                return NextResponse.json({ success: false, error: "Construct not found" }, { status: 404 });
-            }
+            // If not in Firestore, we can't really track it easily now, 
+            // but we can try to check storage directly if needed.
+            // For now, assume Firestore is the index.
+            return NextResponse.json({ success: false, error: "Construct metadata not found" }, { status: 404 });
         }
 
         const data = docSnap.exists() ? docSnap.data() : { visibility: 'public' } as any;
@@ -43,9 +37,9 @@ export async function GET(req: NextRequest) {
                 file: {
                     name: fileName,
                     visibility: data.visibility || 'public',
-                    type: data.type || path.extname(fileName).slice(1),
+                    type: data.type || (fileName.split('.').pop() || 'bin'),
                     size: data.size || 0,
-                    status: docSnap.exists() ? 'db' : 'local'
+                    status: 'db'
                 }
             });
         }
@@ -58,22 +52,27 @@ export async function GET(req: NextRequest) {
         }
 
         let buffer: Buffer;
-        const filePath = path.join(VAULT_DIR, fileName);
 
         try {
-            // Attempt local retrieval
-            buffer = await fs.readFile(filePath);
+            // Attempt Cloud Storage retrieval
+            const storageRef = ref(storage, `${VAULT_PREFIX}/${fileName}`);
+            const url = await getDownloadURL(storageRef);
+            const res = await fetch(url);
+            const arrayBuffer = await res.arrayBuffer();
+            buffer = Buffer.from(arrayBuffer);
         } catch (e) {
-            // Failover to Database if local is missing
+            // Failover to Legacy Database content if cloud storage fails or is missing
             if (data.content) {
                 buffer = Buffer.from(data.content, "base64");
             } else {
-                return NextResponse.json({ success: false, error: "Construct payload missing" }, { status: 404 });
+                return NextResponse.json({ success: false, error: "Construct payload missing in cloud storage" }, { status: 404 });
             }
         }
 
-        const ext = path.extname(fileName).toLowerCase() || `.${data.type}`;
-        const contentType = {
+        const extension = (fileName.split('.').pop() || data.type || '').toLowerCase();
+        const ext = extension.startsWith('.') ? extension : `.${extension}`;
+
+        const contentTypeMap: Record<string, string> = {
             '.jpg': 'image/jpeg',
             '.jpeg': 'image/jpeg',
             '.png': 'image/png',
@@ -83,7 +82,9 @@ export async function GET(req: NextRequest) {
             '.mp4': 'video/mp4',
             '.webm': 'video/webm',
             '.pdf': 'application/pdf',
-        }[ext] || 'application/octet-stream';
+        };
+
+        const contentType = contentTypeMap[ext] || 'application/octet-stream';
 
         const headers: any = { 'Content-Type': contentType };
         if (action === "download") {

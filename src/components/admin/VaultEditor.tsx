@@ -96,30 +96,10 @@ export default function VaultEditor() {
         }
     };
 
-    const transferToDB = async (fileName: string) => {
-        setFiles(prev => prev.map(f => f.name === fileName ? { ...f, status: 'transferring' } : f));
-
-        try {
-            const res = await fetch("/api/vault", {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ fileName, syncToDB: true })
-            });
-            const data = await res.json();
-            if (data.success) {
-                setFiles(prev => prev.map(f => f.name === fileName ? { ...f, status: 'db' } : f));
-            } else {
-                alert(data.error);
-                setFiles(prev => prev.map(f => f.name === fileName ? { ...f, status: 'local' } : f));
-            }
-        } catch (err) {
-            alert("Transfer failed");
-            setFiles(prev => prev.map(f => f.name === fileName ? { ...f, status: 'local' } : f));
-        }
-    };
+    // Transfer logic removed as all files are now directly uploaded to cloud storage
 
     const deleteFile = async (fileName: string) => {
-        if (!confirm(`Are you sure you want to purge "${fileName}" from the vault? This will remove it from both local storage and the database.`)) return;
+        if (!confirm(`Are you sure you want to purge "${fileName}" from the vault? This will permanently remove it from cloud storage.`)) return;
 
         try {
             const res = await fetch(`/api/vault?file=${encodeURIComponent(fileName)}`, {
@@ -206,7 +186,7 @@ export default function VaultEditor() {
                 {loading ? (
                     <div style={{ padding: '4rem', textAlign: 'center', opacity: 0.5 }}>
                         <Loader2 className={styles.pulse} size={48} style={{ margin: '0 auto 1rem' }} />
-                        <p>Scanning local storage...</p>
+                        <p>Scanning cloud storage...</p>
                     </div>
                 ) : files.length === 0 ? (
                     <div style={{ padding: '4rem', textAlign: 'center', border: '2px dashed var(--admin-border)', borderRadius: '15px', color: 'var(--admin-text-dim)' }}>
@@ -302,11 +282,6 @@ export default function VaultEditor() {
                                             </button>
                                         </>
                                     )}
-                                    {file.status === 'local' && (
-                                        <button onClick={() => transferToDB(file.name)} className={styles.blueBtn} title="Sync to Distributed DB" style={{ padding: '8px 12px' }}>
-                                            <Database size={14} />
-                                        </button>
-                                    )}
                                     <button
                                         onClick={() => deleteFile(file.name)}
                                         className={styles.logoutBtn}
@@ -377,7 +352,7 @@ export default function VaultEditor() {
                 <div style={{ fontSize: '0.85rem', color: 'var(--admin-text-secondary)', lineHeight: '1.6' }}>
                     <p>• <strong>Public Access</strong>: Assets are reachable via shareable links without authentication.</p>
                     <p>• <strong>Protected Mode</strong>: Assets require a security code for decryption and retrieval.</p>
-                    <p>• <strong>Internal Storage</strong>: Assets are stored in an obfuscated internal directory to prevent direct indexing.</p>
+                    <p>• <strong>Cloud Storage</strong>: Assets are stored securely in the cloud to ensure availability and persistence.</p>
                 </div>
             </div>
 

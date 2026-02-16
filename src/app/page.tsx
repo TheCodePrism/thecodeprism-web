@@ -8,7 +8,6 @@ import { Github, Linkedin, Twitter, Globe, ExternalLink, ArrowRight, User } from
 import { sendPushNotification } from "@/lib/notifications";
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import ThemeToggle from "@/components/ThemeToggle";
 import { useTheme } from "@/components/ThemeProvider";
 import { Cpu, Zap, Activity, Clock } from "lucide-react";
 import Link from 'next/link';

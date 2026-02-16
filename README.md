@@ -14,6 +14,7 @@ An elite, high-performance web ecosystem built with Next.js 15+, featuring advan
   - Dynamic settings management and profile customization.
 - **🔒 Secure Architecture**:
   - Integrated Firebase Authentication and Firestore.
+  - **Cloud Vault**: Vercel-compatible file storage using Firebase Storage.
   - Protected admin routes with specialized initialization logic.
 - **📱 Responsive & Accessible**: Optimized for all devices with a mobile-first philosophy.
 
@@ -21,7 +22,7 @@ An elite, high-performance web ecosystem built with Next.js 15+, featuring advan
 
 - **Framework**: [Next.js 15+](https://nextjs.org/) (App Router, Server Actions)
 - **Styling**: Vanilla CSS with modern CSS variables and modules.
-- **Backend**: [Firebase](https://firebase.google.com/) (Auth, Firestore, Hosting)
+- **Backend**: [Firebase](https://firebase.google.com/) (Auth, Firestore, Storage, Hosting)
 - **Animations**: Custom GLSL Shaders and React-based procedural systems.
 - **Deployment**: [Vercel](https://vercel.com/)
 

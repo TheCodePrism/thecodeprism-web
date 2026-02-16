@@ -1,84 +1,61 @@
 import { NextRequest, NextResponse } from "next/server";
-import fs from "fs/promises";
-import path from "path";
-import { db } from "@/lib/firebase";
-import { doc, setDoc, getDoc, deleteDoc } from "firebase/firestore";
+import { db, storage } from "@/lib/firebase";
+import { doc, setDoc, getDoc, deleteDoc, collection, getDocs } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 
-// Secure storage directory (not publicly accessible)
-const VAULT_DIR = path.join(process.cwd(), "src", "data", "vault");
+// Vault storage prefix in Firebase Storage
+const VAULT_PREFIX = "vault";
 
-async function ensureVaultDir() {
-    try {
-        await fs.access(VAULT_DIR);
-    } catch {
-        await fs.mkdir(VAULT_DIR, { recursive: true });
-    }
-}
+// No longer using local filesystem
 
 export async function GET(req: NextRequest) {
     try {
-        await ensureVaultDir();
-
         const { searchParams } = new URL(req.url);
-        const fileToFetch = searchParams.get("file");
+        const fileName = searchParams.get("file");
         const action = searchParams.get("action");
 
-        // Admin preview action: stream file from secure storage
-        if (fileToFetch && action === "preview") {
-            const filePath = path.join(VAULT_DIR, fileToFetch);
+        // Admin preview action: stream file from Firebase Storage or redirect
+        if (fileName && action === "preview") {
             try {
-                const buffer = await fs.readFile(filePath);
-                const ext = path.extname(fileToFetch).toLowerCase();
-                const contentType = {
-                    '.jpg': 'image/jpeg',
-                    '.jpeg': 'image/jpeg',
-                    '.png': 'image/png',
-                    '.gif': 'image/gif',
-                    '.webp': 'image/webp',
-                    '.svg': 'image/svg+xml',
-                    '.mp4': 'video/mp4',
-                    '.webm': 'video/webm',
-                    '.pdf': 'application/pdf',
-                }[ext] || 'application/octet-stream';
+                const storageRef = ref(storage, `${VAULT_PREFIX}/${fileName}`);
+                const url = await getDownloadURL(storageRef);
+
+                // Fetch the file to stream it and keep the "secure" feel (masking the direct Firebase URL)
+                const res = await fetch(url);
+                const buffer = await res.arrayBuffer();
+                const contentType = res.headers.get("content-type") || "application/octet-stream";
 
                 return new NextResponse(buffer, {
                     headers: { 'Content-Type': contentType }
                 });
             } catch (e) {
-                return NextResponse.json({ success: false, error: "File not found" }, { status: 404 });
+                return NextResponse.json({ success: false, error: "File not found in storage" }, { status: 404 });
             }
         }
 
-        const files = await fs.readdir(VAULT_DIR);
+        // List files from Firestore metadata
+        const vaultSnapshot = await getDocs(collection(db, "vault"));
 
-        const fileList = await Promise.all(
-            files.map(async (fileName) => {
-                if (fileName === '.gitkeep') return null;
-                const filePath = path.join(VAULT_DIR, fileName);
-                const stats = await fs.stat(filePath);
+        const fileList = vaultSnapshot.docs.map(doc => {
+            const data = doc.data();
+            const fileName = doc.id;
 
-                // Cross-reference with Firestore for security settings
-                const docRef = doc(db, "vault", fileName);
-                const docSnap = await getDoc(docRef);
-                const data = docSnap.exists() ? docSnap.data() : {};
-
-                return {
-                    name: fileName,
-                    size: stats.size,
-                    updatedAt: stats.mtime,
-                    type: path.extname(fileName).slice(1).toLowerCase(),
-                    url: `/api/vault?file=${encodeURIComponent(fileName)}&action=preview`, // Secure admin preview URL
-                    shareUrl: `${process.env.NEXT_PUBLIC_BASE_URL || ''}/v/${encodeURIComponent(fileName)}`,
-                    status: docSnap.exists() ? 'db' : 'local',
-                    visibility: data.visibility || 'public',
-                    hasAccessCode: !!data.accessCode
-                };
-            })
-        );
+            return {
+                name: fileName,
+                size: data.size || 0,
+                updatedAt: data.updatedAt,
+                type: (fileName.split('.').pop() || 'bin').toLowerCase(),
+                url: `/api/vault?file=${encodeURIComponent(fileName)}&action=preview`,
+                shareUrl: `${process.env.NEXT_PUBLIC_BASE_URL || ''}/v/${encodeURIComponent(fileName)}`,
+                status: 'db', // Always synced to cloud now
+                visibility: data.visibility || 'public',
+                hasAccessCode: !!data.accessCode
+            };
+        });
 
         return NextResponse.json({
             success: true,
-            files: fileList.filter(f => f !== null)
+            files: fileList
         });
     } catch (error: any) {
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
@@ -87,7 +64,6 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
     try {
-        await ensureVaultDir();
         const formData = await req.formData();
         const file = formData.get("file") as File;
 
@@ -95,14 +71,28 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ success: false, error: "No file provided" }, { status: 400 });
         }
 
-        const buffer = Buffer.from(await file.arrayBuffer());
-        const filePath = path.join(VAULT_DIR, file.name);
+        const buffer = await file.arrayBuffer();
+        const storageRef = ref(storage, `${VAULT_PREFIX}/${file.name}`);
 
-        await fs.writeFile(filePath, buffer);
+        // Upload to Firebase Storage
+        await uploadBytes(storageRef, buffer, {
+            contentType: file.type
+        });
+
+        // Initialize Firestore metadata
+        const vaultDocRef = doc(db, "vault", file.name);
+        await setDoc(vaultDocRef, {
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            updatedAt: new Date().toISOString(),
+            visibility: 'public',
+            source: 'cloud_upload'
+        });
 
         return NextResponse.json({
             success: true,
-            message: "File uploaded to secure vault",
+            message: "File uploaded to cloud vault",
             file: {
                 name: file.name,
                 size: file.size,
@@ -116,35 +106,27 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
     try {
-        const { fileName, visibility, accessCode, syncToDB } = await req.json();
+        const { fileName, visibility, accessCode } = await req.json();
 
         if (!fileName) {
             return NextResponse.json({ success: false, error: "No fileName provided" }, { status: 400 });
         }
 
-        const filePath = path.join(VAULT_DIR, fileName);
-        const stats = await fs.stat(filePath);
-
         const vaultDocRef = doc(db, "vault", fileName);
         const docSnap = await getDoc(vaultDocRef);
-        const currentData = docSnap.exists() ? docSnap.data() : {};
 
+        if (!docSnap.exists()) {
+            return NextResponse.json({ success: false, error: "Metadata not found" }, { status: 404 });
+        }
+
+        const currentData = docSnap.data();
         const updateData: any = {
             ...currentData,
-            name: fileName,
-            size: stats.size,
-            type: path.extname(fileName).slice(1).toLowerCase(),
             updatedAt: new Date().toISOString(),
         };
 
         if (visibility !== undefined) updateData.visibility = visibility;
-        if (accessCode !== undefined) updateData.accessCode = accessCode; // Should be encrypted in a real app
-
-        if (syncToDB) {
-            const buffer = await fs.readFile(filePath);
-            updateData.content = buffer.toString("base64");
-            updateData.source = "local_transfer";
-        }
+        if (accessCode !== undefined) updateData.accessCode = accessCode;
 
         await setDoc(vaultDocRef, updateData);
 
@@ -166,18 +148,19 @@ export async function DELETE(req: NextRequest) {
             return NextResponse.json({ success: false, error: "No file name provided" }, { status: 400 });
         }
 
-        const filePath = path.join(VAULT_DIR, fileName);
-
         try {
-            await fs.unlink(filePath);
-        } catch (e) { }
+            const storageRef = ref(storage, `${VAULT_PREFIX}/${fileName}`);
+            await deleteObject(storageRef);
+        } catch (e) {
+            console.error("Error deleting from storage:", e);
+        }
 
         const vaultDocRef = doc(db, "vault", fileName);
         await deleteDoc(vaultDocRef);
 
         return NextResponse.json({
             success: true,
-            message: "Construct purged from vault"
+            message: "Construct purged from cloud vault"
         });
     } catch (error: any) {
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });

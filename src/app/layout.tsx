@@ -5,6 +5,7 @@ import InitializationProvider from "@/components/InitializationProvider";
 import GlobalEffectsWrapper from "@/components/effects/GlobalEffectsWrapper";
 
 import { ThemeProvider } from "@/components/ThemeProvider";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -39,6 +40,7 @@ export default function RootLayout({
     <html lang="en" className="no-scrollbar">
       <body className={inter.className}>
         <ThemeProvider>
+          <ThemeToggle />
           <InitializationProvider>
             {/* Global Visual Effects Control */}
             <GlobalEffectsWrapper />
