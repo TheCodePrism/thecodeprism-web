@@ -39,6 +39,18 @@ service cloud.firestore {
       allow write: if isMobileAdmin() || isRemoteUnlocked();
     }
     
+    // Skills: Public read, Admin write
+    match /skills/{skillId} {
+      allow read: if true;
+      allow write: if isMobileAdmin() || isRemoteUnlocked();
+    }
+
+    // Experience: Public read, Admin write
+    match /experience/{expId} {
+      allow read: if true;
+      allow write: if isMobileAdmin() || isRemoteUnlocked();
+    }
+
     // Blog posts: Public read, Admin write (requires mobile unlock)
     match /blog_posts/{postId} {
       allow read: if true;
