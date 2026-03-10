@@ -2,8 +2,12 @@
 
 import { useEntropy } from '@/hooks/useEntropy';
 
-const EntropySystem: React.FC = () => {
-    const entropy = useEntropy(5000);
+interface EntropySystemProps {
+    particles?: number;
+}
+
+const EntropySystem: React.FC<EntropySystemProps> = ({ particles = 5000 }) => {
+    const entropy = useEntropy(particles);
 
     return (
         <>

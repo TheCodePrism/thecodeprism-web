@@ -33,6 +33,11 @@ interface EffectsConfig {
     tesseractScale: number;
     geodesicScale: number;
     tesseractSpeed: number;
+    matrixColor: string;
+    matrixSpeed: number;
+    fluidViscosity: number;
+    entropyParticles: number;
+    heroAlign: string;
 }
 
 interface ThemeContextType {
@@ -69,7 +74,12 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         fluidBackground: false,
         tesseractScale: 1.0,
         geodesicScale: 1.0,
-        tesseractSpeed: 1.0
+        tesseractSpeed: 1.0,
+        matrixColor: '#0f0',
+        matrixSpeed: 1.0,
+        fluidViscosity: 1.0,
+        entropyParticles: 100,
+        heroAlign: 'left'
     });
 
     useEffect(() => {
@@ -105,6 +115,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                     tesseractScale: data.theme?.tesseractScale ?? 1.0,
                     geodesicScale: data.theme?.geodesicScale ?? 1.0,
                     tesseractSpeed: data.theme?.tesseractSpeed ?? 1.0,
+                    matrixColor: data.theme?.matrixColor ?? '#0f0',
+                    matrixSpeed: data.theme?.matrixSpeed ?? 1.0,
+                    fluidViscosity: data.theme?.fluidViscosity ?? 1.0,
+                    entropyParticles: data.theme?.entropyParticles ?? 100,
+                    heroAlign: data.theme?.heroAlign ?? 'left',
                 }));
             }
             setLoadingProfile(false);
@@ -133,7 +148,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         accent,
         accentSoft: `${accent}4d`,
         accentLight: `${accent}1a`,
-        fontMain: 'Inter, sans-serif',
+        fontMain: profile?.theme?.fontFamily || 'Inter, sans-serif',
         glassBg: effects.glassmorphism ? (theme === 'dark' ? 'rgba(10, 10, 10, 0.8)' : 'rgba(255, 255, 255, 0.7)') : (theme === 'dark' ? '#0a0a0a' : '#ffffff'),
         glassBorder: effects.glassmorphism ? (theme === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.1)') : (theme === 'dark' ? '#222' : '#ddd'),
         glassBlur: effects.glassmorphism ? '10px' : '0px',

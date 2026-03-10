@@ -2,9 +2,17 @@
 
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
+interface FluidBackgroundProps {
+    viscosity?: number;
+}
 
-const FluidBackground: React.FC = () => {
+const FluidBackground: React.FC<FluidBackgroundProps> = ({ viscosity = 1.0 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
+    const viscosityRef = useRef(viscosity);
+
+    useEffect(() => {
+        viscosityRef.current = viscosity;
+    }, [viscosity]);
 
     useEffect(() => {
         if (!containerRef.current) return;
@@ -129,7 +137,7 @@ const FluidBackground: React.FC = () => {
                 material.uniforms.uMouse.value.set(x, y);
 
                 velocity.set(x - lastMouse.x, y - lastMouse.y);
-                material.uniforms.uVelocity.value.copy(velocity);
+                material.uniforms.uVelocity.value.copy(velocity).multiplyScalar(2.0 - Math.min(1.9, viscosityRef.current));
 
                 lastMouse.set(x, y);
             };

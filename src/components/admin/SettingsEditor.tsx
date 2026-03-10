@@ -39,6 +39,10 @@ interface ProfileData {
         geodesicScale: number;
         showGeodesicShell: boolean;
         tesseractSpeed: number;
+        matrixColor?: string;
+        matrixSpeed?: number;
+        fluidViscosity?: number;
+        entropyParticles?: number;
     };
 }
 
@@ -99,6 +103,20 @@ export default function SettingsEditor() {
                                     checked={!!profile.theme?.showMatrix}
                                     onChange={v => setProfile({ ...profile, theme: { ...(profile.theme || {}), showMatrix: v } as any })}
                                 />
+                                {profile.theme?.showMatrix && (
+                                    <div style={{ marginLeft: '3rem', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                            <input type="color" value={profile.theme?.matrixColor || '#00FF00'} onChange={e => setProfile({ ...profile, theme: { ...(profile.theme || {}), matrixColor: e.target.value } as any })} style={{ cursor: 'pointer', border: 'none', width: '24px', height: '24px', padding: 0 }} />
+                                            <span style={{ fontSize: '0.8rem', color: 'var(--admin-text-secondary)' }}>Matrix Color</span>
+                                        </div>
+                                        <div>
+                                            <label className={styles.label} style={{ fontSize: '0.75rem', display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                                                Rain Speed <span>{profile.theme?.matrixSpeed || 1.0}x</span>
+                                            </label>
+                                            <input type="range" min="0.1" max="5.0" step="0.1" value={profile.theme?.matrixSpeed || 1.0} onChange={e => setProfile({ ...profile, theme: { ...(profile.theme || {}), matrixSpeed: parseFloat(e.target.value) } as any })} style={{ width: '100%', accentColor: 'var(--admin-accent)' }} />
+                                        </div>
+                                    </div>
+                                )}
                                 <Toggle
                                     id="tesseract"
                                     label="4D Tesseract Scene"
@@ -238,12 +256,28 @@ export default function SettingsEditor() {
                                     checked={!!profile.theme?.entropySystem}
                                     onChange={v => setProfile({ ...profile, theme: { ...(profile.theme || {}), entropySystem: v } as any })}
                                 />
+                                {profile.theme?.entropySystem && (
+                                    <div style={{ marginLeft: '3rem' }}>
+                                        <label className={styles.label} style={{ fontSize: '0.75rem', display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                                            Max Particles <span>{profile.theme?.entropyParticles || 100}</span>
+                                        </label>
+                                        <input type="range" min="10" max="1000" step="10" value={profile.theme?.entropyParticles || 100} onChange={e => setProfile({ ...profile, theme: { ...(profile.theme || {}), entropyParticles: parseInt(e.target.value) } as any })} style={{ width: '100%', accentColor: 'var(--admin-accent)' }} />
+                                    </div>
+                                )}
                                 <Toggle
                                     id="fluid"
                                     label="Navier-Stokes Fluid Background"
                                     checked={!!profile.theme?.fluidBackground}
                                     onChange={v => setProfile({ ...profile, theme: { ...(profile.theme || {}), fluidBackground: v } as any })}
                                 />
+                                {profile.theme?.fluidBackground && (
+                                    <div style={{ marginLeft: '3rem' }}>
+                                        <label className={styles.label} style={{ fontSize: '0.75rem', display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                                            Fluid Viscosity <span>{profile.theme?.fluidViscosity || 1.0}</span>
+                                        </label>
+                                        <input type="range" min="0.1" max="2.0" step="0.1" value={profile.theme?.fluidViscosity || 1.0} onChange={e => setProfile({ ...profile, theme: { ...(profile.theme || {}), fluidViscosity: parseFloat(e.target.value) } as any })} style={{ width: '100%', accentColor: 'var(--admin-accent)' }} />
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>

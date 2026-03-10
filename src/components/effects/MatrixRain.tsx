@@ -6,12 +6,14 @@ interface MatrixRainProps {
     opacity?: number;
     color?: string;
     fontSize?: number;
+    speed?: number;
 }
 
 const MatrixRain: React.FC<MatrixRainProps> = ({
     opacity = 0.15,
     color = "#0F0",
-    fontSize = 14
+    fontSize = 14,
+    speed = 1.0
 }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -56,7 +58,9 @@ const MatrixRain: React.FC<MatrixRainProps> = ({
                 }
                 drops[i]++;
             }
-            animationFrameId = requestAnimationFrame(draw);
+            setTimeout(() => {
+                animationFrameId = requestAnimationFrame(draw);
+            }, 33 / Math.max(0.1, speed));
         };
 
         resize();
@@ -67,7 +71,7 @@ const MatrixRain: React.FC<MatrixRainProps> = ({
             window.removeEventListener('resize', resize);
             cancelAnimationFrame(animationFrameId);
         };
-    }, [color, fontSize]);
+    }, [color, fontSize, speed]);
 
     return (
         <div id="matrix-canvas-container" style={{ opacity }}>

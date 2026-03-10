@@ -16,7 +16,7 @@ export default function GlobalEffectsWrapper() {
 
     return (
         <>
-            {effects.showMatrix && <MatrixRain />}
+            {effects.showMatrix && <MatrixRain color={effects.matrixColor} speed={effects.matrixSpeed} />}
             {(effects.showTesseract || effects.showGeodesicShell) && (
                 <TesseractScene
                     tesseractScale={effects.tesseractScale}
@@ -31,8 +31,8 @@ export default function GlobalEffectsWrapper() {
             {/* Universal Laws */}
             {effects.showAttractor && <LorenzAttractor />}
             {effects.enableLensing && <GravitationalLensing />}
-            {effects.fluidBackground && <FluidBackground />}
-            {effects.entropySystem && <EntropySystem />}
+            {effects.fluidBackground && <FluidBackground viscosity={effects.fluidViscosity} />}
+            {effects.entropySystem && <EntropySystem particles={effects.entropyParticles} />}
 
 
             <style jsx global>{`
