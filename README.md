@@ -11,7 +11,8 @@ An elite, high-performance web ecosystem built with Next.js 15+, featuring advan
 - **🛠️ Command Center (Admin)**:
   - Real-time analytics dashboard.
   - Full-featured blog and project editors.
-  - Dynamic settings management and profile customization.
+  - **Granular Visual Tuning**: Precision control over every VFX parameter (colors, speeds, densities).
+  - **Remote Matrix Control**: Syncs instantly with the Mobile Admin app for hard-gated real-time tuning.
 - **🔒 Secure Architecture**:
   - Integrated Firebase Authentication and Firestore.
   - **Cloud Vault**: Vercel-compatible file storage using Firebase Storage.
